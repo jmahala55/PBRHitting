@@ -678,7 +678,7 @@ def generate_contact_points_html(contact_data):
     if not contact_data:
         return "", ""
     
-    # Find min/max values for scaling
+    # Find min/max values for scaling (keep existing for side view)
     x_values = [d['ContactPositionX'] for d in contact_data if d['ContactPositionX'] is not None]
     y_values = [d['ContactPositionY'] for d in contact_data if d['ContactPositionY'] is not None]
     z_values = [d['ContactPositionZ'] for d in contact_data if d['ContactPositionZ'] is not None]
@@ -712,7 +712,7 @@ def generate_contact_points_html(contact_data):
         else:
             return 'fly-ball'
     
-    # Generate side view HTML (Y vs Z)
+    # Generate side view HTML (Y vs Z) - Keep existing functionality
     side_view_html = ""
     for i, contact in enumerate(contact_data):
         y_pos = contact.get('ContactPositionY')
@@ -735,33 +735,33 @@ def generate_contact_points_html(contact_data):
                  title="Point {i+1}: Y={y_pos:.2f}, Z={z_pos:.2f}">
             </div>'''
     
-    # Generate overhead view HTML (X vs Y) with home plate
+    # Generate CORRECTED overhead view HTML (X vs Z) with proper scaling
     overhead_view_html = ""
     
-    # Add home plate at a fixed position (bottom center of plot)
-    overhead_view_html += '''
-    <div style="position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); 
-                width: 16px; height: 12px; background: #2d3748; border: 2px solid #1a202c; 
-                border-radius: 2px 2px 0 0; z-index: 10;">
-    </div>
-    <div style="position: absolute; bottom: 13px; left: 50%; transform: translateX(-50%); 
-                width: 0; height: 0; border-left: 8px solid transparent; 
-                border-right: 8px solid transparent; border-top: 8px solid #2d3748; z-index: 10;">
-    </div>
-    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); 
-                font-size: 8px; color: #4a5568; font-weight: 600; white-space: nowrap;">
-        Home Plate
-    </div>'''
-    
-    # Add contact points to overhead view
     for i, contact in enumerate(contact_data):
         x_pos = contact.get('ContactPositionX')
-        y_pos = contact.get('ContactPositionY')
+        z_pos = contact.get('ContactPositionZ')
         
-        if x_pos is not None and y_pos is not None:
-            # Scale positions to plot container (15-85% to leave margins)
-            x_percent = ((x_pos - (x_min - x_padding)) / (x_range + 2 * x_padding)) * 70 + 15
-            y_percent = ((y_pos - (y_min - y_padding)) / (y_range + 2 * y_padding)) * 70 + 15
+        if x_pos is not None and z_pos is not None:
+            # X-axis: Side Position 
+            # Home plate is 17" wide (8.5" each side), convert feet to inches
+            x_inches = x_pos * 12
+            # Scale X from -12" to +12" (giving some margin beyond plate width)
+            # Map to 15% to 85% of plot width
+            x_percent = ((x_inches + 12) / 24) * 70 + 15
+            
+            # Z-axis: Depth Position - CORRECTED SCALING
+            # Convert feet to inches
+            z_inches = z_pos * 12
+            
+            # Define our plot coordinate system:
+            # - We want Z = +18" (1.5 feet in front) to be at top (5% from top)
+            # - We want Z = -18" (home plate tip) to be at bottom (95% from top)
+            # - Z = 0 (front edge of plate) should be at about 55% from top
+            
+            # Total range: +18" to -18" = 36"
+            # Map this to 5% to 95% of plot height (90% total)
+            y_percent = 5 + ((18 - z_inches) / 36) * 90
             
             # Clamp to visible area
             x_percent = max(5, min(95, x_percent))
@@ -769,10 +769,17 @@ def generate_contact_points_html(contact_data):
             
             contact_type = get_contact_type(contact)
             
+            # Enhanced tooltip with more data
+            exit_speed = contact.get('ExitSpeed', 'N/A')
+            angle = contact.get('Angle', 'N/A')
+            distance = contact.get('Distance', 'N/A')
+            
+            tooltip = f"Point {i+1}: X={x_pos:.3f}ft ({x_inches:.1f}\"), Z={z_pos:.3f}ft ({z_inches:.1f}\") | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
+            
             overhead_view_html += f'''
             <div class="contact-point {contact_type}" 
                  style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
-                 title="Point {i+1}: X={x_pos:.2f}, Y={y_pos:.2f}">
+                 title="{tooltip}">
             </div>'''
     
     return side_view_html, overhead_view_html
