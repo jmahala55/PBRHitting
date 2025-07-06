@@ -60,6 +60,11 @@ def index():
     """Serve the main HTML page"""
     return render_template('hitting_index.html')
 
+@app.route('/point-of-contact/<hitter_name>/<date>')
+def point_of_contact_page(hitter_name, date):
+    """Serve the Point of Contact analysis page"""
+    return render_template('point_of_contact.html', hitter_name=hitter_name, date=date)
+
 @app.route('/api/dates')
 def get_dates():
     """API endpoint to get all available dates from TestTwo"""
@@ -163,6 +168,115 @@ def get_hitter_details():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/point-of-contact')
+def get_point_of_contact():
+    """API endpoint to get point of contact data for a specific hitter and date"""
+    if not client:
+        return jsonify({'error': 'BigQuery client not initialized'}), 500
+    
+    selected_date = request.args.get('date')
+    hitter_name = request.args.get('hitter')
+    
+    if not selected_date or not hitter_name:
+        return jsonify({'error': 'Date and hitter parameters are required'}), 400
+    
+    try:
+        query = """
+        SELECT 
+            PitchNo,
+            ContactPositionX,
+            ContactPositionY,
+            ContactPositionZ,
+            ExitSpeed,
+            Angle,
+            Distance,
+            Direction,
+            PlayResult
+        FROM `V1PBR.TestTwo`
+        WHERE CAST(Date AS STRING) = @date
+        AND Batter = @hitter
+        AND ContactPositionX IS NOT NULL
+        AND ContactPositionY IS NOT NULL
+        AND ContactPositionZ IS NOT NULL
+        ORDER BY PitchNo
+        """
+        
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("date", "STRING", selected_date),
+                bigquery.ScalarQueryParameter("hitter", "STRING", hitter_name),
+            ]
+        )
+        
+        result = client.query(query, job_config=job_config)
+        
+        # Convert to list of dictionaries
+        contact_data = []
+        for row in result:
+            contact_data.append(dict(row))
+        
+        # Calculate contact statistics
+        contact_stats = calculate_contact_stats(contact_data)
+        
+        return jsonify({
+            'contact_data': contact_data,
+            'contact_stats': contact_stats
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def calculate_contact_stats(contact_data):
+    """Calculate point of contact statistics"""
+    if not contact_data:
+        return None
+    
+    # Extract coordinates
+    x_positions = [d['ContactPositionX'] for d in contact_data if d['ContactPositionX'] is not None]
+    y_positions = [d['ContactPositionY'] for d in contact_data if d['ContactPositionY'] is not None]
+    z_positions = [d['ContactPositionZ'] for d in contact_data if d['ContactPositionZ'] is not None]
+    
+    if not x_positions:
+        return None
+    
+    # Calculate averages
+    avg_x = round(sum(x_positions) / len(x_positions), 2)
+    avg_y = round(sum(y_positions) / len(y_positions), 2)
+    avg_z = round(sum(z_positions) / len(z_positions), 2)
+    
+    # Determine primary contact zone based on Y position
+    if avg_y > 3:
+        primary_zone = "Deep"
+    elif avg_y > -3:
+        primary_zone = "Optimal"
+    else:
+        primary_zone = "Early"
+    
+    # Calculate consistency (standard deviation)
+    import statistics
+    try:
+        consistency_score = round(statistics.stdev(y_positions), 2)
+        if consistency_score < 2:
+            consistency = "Excellent"
+        elif consistency_score < 4:
+            consistency = "Good"
+        else:
+            consistency = "Needs Work"
+    except:
+        consistency = "N/A"
+    
+    return {
+        'avg_side': f"{avg_x:.1f}\"",
+        'avg_depth': f"{avg_y:.1f}\"",
+        'avg_height': f"{avg_z:.1f}\"",
+        'total_contacts': len(contact_data),
+        'primary_zone': primary_zone,
+        'consistency': consistency,
+        'raw_avg_x': avg_x,
+        'raw_avg_y': avg_y,
+        'raw_avg_z': avg_z
+    }
 
 @app.route('/api/matched-hitters')
 def get_matched_hitters():
@@ -559,6 +673,110 @@ def get_hitter_summary():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def generate_contact_points_html(contact_data):
+    """Generate HTML for contact points that will be injected into the template"""
+    if not contact_data:
+        return "", ""
+    
+    # Find min/max values for scaling
+    x_values = [d['ContactPositionX'] for d in contact_data if d['ContactPositionX'] is not None]
+    y_values = [d['ContactPositionY'] for d in contact_data if d['ContactPositionY'] is not None]
+    z_values = [d['ContactPositionZ'] for d in contact_data if d['ContactPositionZ'] is not None]
+    
+    if not x_values:
+        return "", ""
+    
+    x_min, x_max = min(x_values), max(x_values)
+    y_min, y_max = min(y_values), max(y_values)
+    z_min, z_max = min(z_values), max(z_values)
+    
+    # Calculate ranges with minimum range of 2 to avoid division by zero
+    x_range = max(x_max - x_min, 2)
+    y_range = max(y_max - y_min, 2)
+    z_range = max(z_max - z_min, 2)
+    
+    # Add padding (20% of range)
+    x_padding = x_range * 0.2
+    y_padding = y_range * 0.2
+    z_padding = z_range * 0.2
+    
+    # Helper function to determine contact type
+    def get_contact_type(contact):
+        angle = contact.get('Angle')
+        if angle is None:
+            return 'foul'
+        if angle < 10:
+            return 'ground-ball'
+        elif 10 <= angle <= 25:
+            return 'line-drive'
+        else:
+            return 'fly-ball'
+    
+    # Generate side view HTML (Y vs Z)
+    side_view_html = ""
+    for i, contact in enumerate(contact_data):
+        y_pos = contact.get('ContactPositionY')
+        z_pos = contact.get('ContactPositionZ')
+        
+        if y_pos is not None and z_pos is not None:
+            # Scale positions to plot container (15-85% to leave margins)
+            x_percent = ((y_pos - (y_min - y_padding)) / (y_range + 2 * y_padding)) * 70 + 15
+            y_percent = 85 - ((z_pos - (z_min - z_padding)) / (z_range + 2 * z_padding)) * 70  # Invert Y
+            
+            # Clamp to visible area
+            x_percent = max(5, min(95, x_percent))
+            y_percent = max(5, min(95, y_percent))
+            
+            contact_type = get_contact_type(contact)
+            
+            side_view_html += f'''
+            <div class="contact-point {contact_type}" 
+                 style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
+                 title="Point {i+1}: Y={y_pos:.2f}, Z={z_pos:.2f}">
+            </div>'''
+    
+    # Generate overhead view HTML (X vs Y) with home plate
+    overhead_view_html = ""
+    
+    # Add home plate at a fixed position (bottom center of plot)
+    overhead_view_html += '''
+    <div style="position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); 
+                width: 16px; height: 12px; background: #2d3748; border: 2px solid #1a202c; 
+                border-radius: 2px 2px 0 0; z-index: 10;">
+    </div>
+    <div style="position: absolute; bottom: 13px; left: 50%; transform: translateX(-50%); 
+                width: 0; height: 0; border-left: 8px solid transparent; 
+                border-right: 8px solid transparent; border-top: 8px solid #2d3748; z-index: 10;">
+    </div>
+    <div style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); 
+                font-size: 8px; color: #4a5568; font-weight: 600; white-space: nowrap;">
+        Home Plate
+    </div>'''
+    
+    # Add contact points to overhead view
+    for i, contact in enumerate(contact_data):
+        x_pos = contact.get('ContactPositionX')
+        y_pos = contact.get('ContactPositionY')
+        
+        if x_pos is not None and y_pos is not None:
+            # Scale positions to plot container (15-85% to leave margins)
+            x_percent = ((x_pos - (x_min - x_padding)) / (x_range + 2 * x_padding)) * 70 + 15
+            y_percent = ((y_pos - (y_min - y_padding)) / (y_range + 2 * y_padding)) * 70 + 15
+            
+            # Clamp to visible area
+            x_percent = max(5, min(95, x_percent))
+            y_percent = max(5, min(95, y_percent))
+            
+            contact_type = get_contact_type(contact)
+            
+            overhead_view_html += f'''
+            <div class="contact-point {contact_type}" 
+                 style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
+                 title="Point {i+1}: X={x_pos:.2f}, Y={y_pos:.2f}">
+            </div>'''
+    
+    return side_view_html, overhead_view_html
+
 def generate_hitter_pdf(hitter_name, hitting_data, date):
     """Generate a PDF report for the hitter using WeasyPrint"""
     try:
@@ -580,7 +798,38 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
         # Calculate summary statistics WITH COMPARISONS (pass hitter_name)
         summary_stats = calculate_hitting_summary(hitting_data, hitter_name)
         
-        print(f"Generating PDF for {formatted_name} with {len(batted_balls)} batted balls")
+        # Get point of contact data - filter for records with valid contact positions
+        contact_data = []
+        for hit in hitting_data:
+            # Check if contact position fields exist and are not None/null
+            x_pos = hit.get('ContactPositionX')
+            y_pos = hit.get('ContactPositionY') 
+            z_pos = hit.get('ContactPositionZ')
+            
+            # More flexible checking - also check for 0 values which might be valid
+            if (x_pos is not None and y_pos is not None and z_pos is not None and
+                x_pos != '' and y_pos != '' and z_pos != ''):
+                contact_data.append({
+                    'PitchNo': hit.get('PitchNo'),
+                    'ContactPositionX': float(x_pos) if x_pos is not None else None,
+                    'ContactPositionY': float(y_pos) if y_pos is not None else None,
+                    'ContactPositionZ': float(z_pos) if z_pos is not None else None,
+                    'ExitSpeed': hit.get('ExitSpeed'),
+                    'Angle': hit.get('Angle'),
+                    'Distance': hit.get('Distance'),
+                    'Direction': hit.get('Direction'),
+                    'PlayResult': hit.get('PlayResult')
+                })
+        
+        # Calculate contact statistics
+        contact_stats = calculate_contact_stats(contact_data) if contact_data else None
+        
+        # Generate contact points HTML for server-side rendering
+        side_view_points, overhead_view_points = generate_contact_points_html(contact_data)
+        
+        print(f"Generating PDF for {formatted_name} with {len(batted_balls)} batted balls and {len(contact_data)} contact points")
+        print(f"Generated {len(side_view_points.split('contact-point')) - 1} side view points")
+        print(f"Generated {len(overhead_view_points.split('contact-point')) - 1} overhead view points")
         
         # Read HTML template
         try:
@@ -590,13 +839,26 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
             print("Error: hitter_report.html not found. Make sure it's in the same directory as app.py")
             return None
         
+        # Custom filter to convert data to JSON for JavaScript (still needed for fallback)
+        def tojsonfilter(obj):
+            import json
+            return json.dumps(obj)
+        
         # Render template with data using Jinja2
-        template = Template(html_template)
+        from jinja2 import Environment
+        env = Environment()
+        env.filters['tojsonfilter'] = tojsonfilter
+        template = env.from_string(html_template)
+        
         rendered_html = template.render(
             hitter_name=formatted_name,
             date=date,
             summary_stats=summary_stats,
-            hitting_data=batted_balls  # Pass filtered data instead of all data
+            hitting_data=batted_balls,  # Pass filtered data instead of all data
+            contact_data=contact_data,  # Add contact position data (for JavaScript fallback)
+            contact_stats=contact_stats,  # Add contact statistics
+            side_view_points_html=side_view_points,  # Pre-generated HTML points
+            overhead_view_points_html=overhead_view_points  # Pre-generated HTML points
         )
         
         # Generate PDF using WeasyPrint with proper base_url for static files
@@ -614,7 +876,7 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
             
             html_doc = weasyprint.HTML(string=rendered_html, base_url=base_url)
             pdf_bytes = html_doc.write_pdf()
-            print(f"PDF generated successfully for {formatted_name}")
+            print(f"PDF generated successfully for {formatted_name} with contact analysis")
             return pdf_bytes
         except Exception as e:
             print(f"WeasyPrint error: {str(e)}")
