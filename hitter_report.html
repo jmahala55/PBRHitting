@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitting Performance Report - {{ hitter_name }}</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0.4in;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 40px;
+            background-color: white;
+            color: #2c3e50;
+            font-size: 12px;
+            line-height: 1.5;
+            position: relative;
+        }
+        
+        .logo-placeholder {
+            width: 320px;
+            height: 120px;
+            background: url('static/pbr.png') center/contain no-repeat;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            margin-left: -75px;
+        }
+        
+        /* Player Info Bar */
+        .player-info {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            align-items: center;
+            margin: 0px 0;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .player-info-left {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .player-info-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .player-info-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .player-name {
+            font-size: 26px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .player-name-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-subtitle {
+            font-size: 10px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.75);
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .player-subtitle::after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 1.5px;
+            margin: 6px auto 0;
+            background-color: rgba(255, 255, 255, 0.25);
+            border-radius: 2px;
+        }
+        
+        .date-info {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #1f2937, #4b5563);
+            border-radius: 9999px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        /* Summary Section */
+        .summary-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+            border: 1px solid #e2e8f0;
+            margin: 25px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .summary-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            margin: 0;
+            font-size: 18px;
+            text-align: center;
+            padding: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .stats-container {
+            padding: 25px;
+        }
+        
+        /* Hitting Stats Grid - Cleaner layout with consistent alignment */
+        .hitting-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 25px;
+            margin: 30px 0;
+            max-width: 100%;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Option 6: Combination styling - only border accent */
+        .stat-card.above-average {
+            border-left: 6px solid #10b981;
+            background: white;
+        }
+        
+        .stat-card.below-average {
+            border-left: 6px solid #ef4444;
+            background: white;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.2;
+        }
+        
+        .stat-value-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            line-height: 1;
+            background: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        
+        .stat-value.above-average {
+            color: #059669;
+            background: none !important;
+        }
+        
+        .stat-value.below-average {
+            color: #dc2626;
+            background: none !important;
+        }
+        
+        .college-value {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+        
+        .stat-unit {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: auto;
+        }
+        
+        /* Color coding for different stats */
+        .exit-velocity .stat-value {
+            color: #dc2626;
+        }
+        
+        .launch-angle .stat-value {
+            color: #059669;
+        }
+        
+        .distance .stat-value {
+            color: #7c3aed;
+        }
+        
+        .batting-avg .stat-value {
+            color: #ea580c;
+        }
+        
+        .barrel .stat-value {
+            color: #f59e0b;
+        }
+        
+        .hardhit .stat-value {
+            color: #dc2626;
+        }
+        
+        /* Comparison Legend */
+        .comparison-legend {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 10px;
+        }
+        
+        .legend-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .legend-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        
+        .above-average {
+            background: #10b981;
+            color: white;
+        }
+        
+        .below-average {
+            background: #ef4444;
+            color: white;
+        }
+        
+        /* Comparison styling */
+        .comparison-cell {
+            position: relative;
+            padding: 8px 6px !important;
+        }
+        
+        .player-value {
+            display: block;
+            font-weight: 800;
+            font-size: 32px;
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+        
+        .college-value {
+            display: block;
+            font-size: 8px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .comparison-indicator {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .comparison-indicator::before {
+            content: "↑";
+            margin-top: -2px;
+        }
+
+        .comparison-indicator.above-average {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .comparison-indicator.below-average {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .comparison-indicator.below-average::before {
+            content: "↓";
+            margin-top: -2px;
+        }
+        
+        /* Details Section */
+        .details-section {
+            margin: 30px 0;
+        }
+        
+        .section-header {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding: 18px 25px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        /* Hitting Table */
+        .hitting-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            font-size: 11px;
+        }
+        
+        .hitting-table th {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 14px 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .hitting-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border: none;
+            font-size: 11px;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .hitting-table tr:nth-child(even) {
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        }
+        
+        .hitting-table tr:nth-child(odd) {
+            background: white;
+        }
+        
+        /* At-Bat Number Styling */
+        .ab-number {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+            color: white !important;
+            font-weight: 700;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            margin: 0 auto;
+            font-size: 11px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        /* Play Result Styling */
+        .play-result {
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .hit {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(5,150,105,0.3);
+        }
+        
+        .out {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(220,38,38,0.3);
+        }
+        
+        .other {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(107,114,128,0.3);
+        }
+        
+        /* Exit Velocity Color Coding */
+        .exit-velo-high {
+            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            border-radius: 6px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 6px rgba(220,38,38,0.3);
+        }
+        
+        .exit-velo-medium {
+            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+            border-radius: 6px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 6px rgba(234,88,12,0.3);
+        }
+        
+        .exit-velo-low {
+            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            border-radius: 6px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 6px rgba(5,150,105,0.3);
+        }
+        
+        /* Launch Angle Styling */
+        .launch-angle-optimal {
+            color: #059669;
+            font-weight: 700;
+            background: rgba(16,185,129,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .launch-angle-high {
+            color: #7c3aed;
+            font-weight: 700;
+            background: rgba(124,58,237,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .launch-angle-low {
+            color: #dc2626;
+            font-weight: 700;
+            background: rgba(220,38,38,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        /* Distance Styling */
+        .distance-long {
+            color: #7c3aed;
+            font-weight: 700;
+            background: rgba(124,58,237,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .distance-medium {
+            color: #ea580c;
+            font-weight: 700;
+            background: rgba(234,88,12,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .distance-short {
+            color: #64748b;
+            font-weight: 700;
+            background: rgba(100,116,139,0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 20px;
+            background: #1a1a1a;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 10px;
+            position: relative;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2);
+            height: 20px;
+            margin: 0;
+        }
+
+        .footer-logo {
+            height: 24px;
+            width: auto;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .footer-text {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .footer-date {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        /* Performance Badges */
+        .performance-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 4px;
+        }
+        
+        .badge-excellent {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+        }
+        
+        .badge-good {
+            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+            color: white;
+        }
+        
+        .badge-needs-work {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+        }
+        .details-section {
+    min-height: 60vh; /* Ensures enough content to push footer down */
+}
+
+        
+        
+        @media print {
+            
+            @page {
+                margin: 0.4in 0.4in 0.8in 0.4in;
+                size: A4 landscape;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+                padding-bottom: 60px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .header, .summary-section, .footer {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            .footer {
+    position: fixed;
+    bottom: -25px;
+    left: 0;
+    right: 0;
+}
+            
+            .hitting-table {
+                font-size: 10px;
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+            
+            .hitting-table th,
+            .hitting-table td {
+                padding: 8px 6px;
+            }
+            
+            .stat-card:hover {
+                transform: none;
+                background: inherit !important;
+            }
+            
+            .section-header {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-info">
+        <div class="player-info-left">
+            <div class="logo-placeholder"></div>
+        </div>
+        <div class="player-name-group">
+            <div class="player-name">{{ hitter_name }}</div>
+            <div class="player-subtitle">Hitting Performance Report</div>
+        </div>
+        <div class="player-info-right">
+            <div class="date-info">{{ date }}</div>
+        </div>
+    </div>
+
+    {% if summary_stats.comparison_level %}
+    <div class="comparison-legend">
+        <div class="legend-title">College Baseball Comparison Legend</div>
+        <div class="legend-item">
+            <span class="legend-indicator above-average"></span>
+            Above {{ summary_stats.comparison_level }} Average
+        </div>
+        <div class="legend-item">
+            <span class="legend-indicator below-average"></span>
+            Below {{ summary_stats.comparison_level }} Average
+        </div>
+        <div style="margin-top: 8px; color: #64748b; font-size: 9px;">
+            Player values shown in bold, {{ summary_stats.comparison_level }} averages shown below in gray
+        </div>
+    </div>
+    {% endif %}
+
+    {% if summary_stats %}
+    <div class="summary-section">
+        <h2 class="summary-header">Exit Velocity & Quality of Contact Summary</h2>
+        <div class="stats-container">
+            <div class="hitting-stats-grid">
+                <div class="stat-card {% if summary_stats.avg_exit_velo_comp and summary_stats.avg_exit_velo_comp.better %}above-average{% elif summary_stats.avg_exit_velo_comp %}below-average{% endif %}">
+                    <div class="stat-label">Avg Exit Velocity</div>
+                    <div class="stat-value-section">
+                        <div class="stat-value {% if summary_stats.avg_exit_velo_comp and summary_stats.avg_exit_velo_comp.better %}above-average{% elif summary_stats.avg_exit_velo_comp %}below-average{% endif %}">{{ summary_stats.avg_exit_velo }}</div>
+                        {% if summary_stats.college_avg_exit_velo %}
+                        <div class="college-value">{{ summary_stats.comparison_level }}: {{ summary_stats.college_avg_exit_velo }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-unit">mph</div>
+                </div>
+                
+                <div class="stat-card {% if summary_stats.percentile_90_ev_comp and summary_stats.percentile_90_ev_comp.better %}above-average{% elif summary_stats.percentile_90_ev_comp %}below-average{% endif %}">
+                    <div class="stat-label">90th Percentile EV</div>
+                    <div class="stat-value-section">
+                        <div class="stat-value {% if summary_stats.percentile_90_ev_comp and summary_stats.percentile_90_ev_comp.better %}above-average{% elif summary_stats.percentile_90_ev_comp %}below-average{% endif %}">{{ summary_stats.percentile_90_ev }}</div>
+                        {% if summary_stats.college_percentile_90_ev %}
+                        <div class="college-value">{{ summary_stats.comparison_level }}: {{ summary_stats.college_percentile_90_ev }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-unit">mph</div>
+                </div>
+                
+                <div class="stat-card {% if summary_stats.max_exit_velo_comp and summary_stats.max_exit_velo_comp.better %}above-average{% elif summary_stats.max_exit_velo_comp %}below-average{% endif %}">
+                    <div class="stat-label">Max Exit Velocity</div>
+                    <div class="stat-value-section">
+                        <div class="stat-value {% if summary_stats.max_exit_velo_comp and summary_stats.max_exit_velo_comp.better %}above-average{% elif summary_stats.max_exit_velo_comp %}below-average{% endif %}">{{ summary_stats.max_exit_velo }}</div>
+                        {% if summary_stats.college_max_exit_velo %}
+                        <div class="college-value">{{ summary_stats.comparison_level }}: {{ summary_stats.college_max_exit_velo }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-unit">mph</div>
+                </div>
+                
+                <div class="stat-card {% if summary_stats.barrel_rate_comp and summary_stats.barrel_rate_comp.better %}above-average{% elif summary_stats.barrel_rate_comp %}below-average{% endif %}">
+                    <div class="stat-label">Barrel%</div>
+                    <div class="stat-value-section">
+                        <div class="stat-value {% if summary_stats.barrel_rate_comp and summary_stats.barrel_rate_comp.better %}above-average{% elif summary_stats.barrel_rate_comp %}below-average{% endif %}">{{ summary_stats.barrel_rate }}%</div>
+                        {% if summary_stats.college_barrel_rate %}
+                        <div class="college-value">{{ summary_stats.comparison_level }}: {{ summary_stats.college_barrel_rate }}%</div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-unit">Rate</div>
+                </div>
+                
+                <div class="stat-card {% if summary_stats.hardhit_rate_comp and summary_stats.hardhit_rate_comp.better %}above-average{% elif summary_stats.hardhit_rate_comp %}below-average{% endif %}">
+                    <div class="stat-label">Hard Hit%</div>
+                    <div class="stat-value-section">
+                        <div class="stat-value {% if summary_stats.hardhit_rate_comp and summary_stats.hardhit_rate_comp.better %}above-average{% elif summary_stats.hardhit_rate_comp %}below-average{% endif %}">{{ summary_stats.hardhit_rate }}%</div>
+                        {% if summary_stats.college_hardhit_rate %}
+                        <div class="college-value">{{ summary_stats.comparison_level }}: {{ summary_stats.college_hardhit_rate }}%</div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-unit">Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- PAGE BREAK HERE -->
+    <div style="page-break-before: always;"></div>
+    
+    <div class="details-section">
+        <h2 class="section-header">Batted Ball Log</h2>
+        <table class="hitting-table">
+            <thead>
+                <tr>
+                    <th>Batted Ball #</th>
+                    <th>Exit Velocity<br>(mph)</th>
+                    <th>Launch Angle<br>(degrees)</th>
+                    <th>Distance<br>(feet)</th>
+                    <th>Direction</th>
+                    <th>Pitch Velocity<br>(mph)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ab in hitting_data %}
+                <tr>
+                    <td>
+                        <div class="ab-number">{{ loop.index }}</div>
+                    </td>
+                    <td>
+                        {% if ab.ExitSpeed >= 95 %}
+                            <span class="exit-velo-high">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
+                        {% elif ab.ExitSpeed >= 85 %}
+                            <span class="exit-velo-medium">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
+                        {% else %}
+                            <span class="exit-velo-low">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if ab.Angle %}
+                            {% if 10 <= ab.Angle <= 35 %}
+                                <span class="launch-angle-optimal">{{ "%.1f"|format(ab.Angle) }}°</span>
+                            {% elif ab.Angle > 35 %}
+                                <span class="launch-angle-high">{{ "%.1f"|format(ab.Angle) }}°</span>
+                            {% else %}
+                                <span class="launch-angle-low">{{ "%.1f"|format(ab.Angle) }}°</span>
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if ab.Distance %}
+                            {% if ab.Distance >= 350 %}
+                                <span class="distance-long">{{ "%.0f"|format(ab.Distance) }}</span>
+                            {% elif ab.Distance >= 200 %}
+                                <span class="distance-medium">{{ "%.0f"|format(ab.Distance) }}</span>
+                            {% else %}
+                                <span class="distance-short">{{ "%.0f"|format(ab.Distance) }}</span>
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.1f"|format(ab.Direction) if ab.Direction else 'N/A' }}</td>
+                    <td>{{ "%.1f"|format(ab.RelSpeed) if ab.RelSpeed else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+
+                
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        <img src="static/pbr.png" alt="PBR Logo" class="footer-logo">
+        <span class="footer-text">{{ hitter_name }}</span>
+        <span class="footer-date">{{ date }}</span>
+    </div>
+
+</body>
+</html>

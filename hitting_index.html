@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitting Analytics Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        select:focus, button:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .individual-btn {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+        
+        .individual-btn:hover {
+            background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+        }
+        
+        .bulk-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .bulk-btn:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+        }
+        
+        .hitting-info {
+            background: #e8f4fd;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .hitting-info h3 {
+            margin-top: 0;
+            color: #2980b9;
+        }
+        
+        .hitter-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .hitter-info h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .hitter-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .hitter-detail {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .loading, .error, .success {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .loading {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #495057;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .stats-section, .email-results {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .stats-section h3, .email-results h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .hitter-summary {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .hitter-summary h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        
+        .exit-velo {
+            color: #dc2626;
+        }
+        
+        .launch-angle {
+            color: #059669;
+        }
+        
+        .distance {
+            color: #7c3aed;
+        }
+        
+        .batting-avg {
+            color: #ea580c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚾ Hitting Analytics Tool</h1>
+        
+        <div class="form-group">
+            <label for="dateSelect">Select Date:</label>
+            <select id="dateSelect">
+                <option value="">Loading dates...</option>
+            </select>
+        </div>
+        
+        <div class="hitting-info">
+            <h3>Hitting Performance Analysis</h3>
+            <p>This tool analyzes hitting performance data including:</p>
+            <ul>
+                <li><strong>Exit Velocity:</strong> Speed of ball off the bat (mph)</li>
+                <li><strong>Launch Angle:</strong> Vertical angle of ball trajectory (degrees)</li>
+                <li><strong>Distance:</strong> Total distance traveled (feet)</li>
+                <li><strong>Batting Average:</strong> Hits divided by at-bats</li>
+            </ul>
+            <p>Reports are automatically sent to hitters with Type = 'Hitting' in the database.</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="hitterSelect">Select Hitter (Individual Actions):</label>
+            <select id="hitterSelect" disabled>
+                <option value="">Select a date first</option>
+            </select>
+        </div>
+        
+        <div id="selectedHitterInfo" class="hitter-info" style="display: none;">
+            <h3>Selected Hitter Details</h3>
+            <div id="hitterDetails" class="hitter-details"></div>
+        </div>
+        
+        <div id="hitterSummary" class="hitter-summary" style="display: none;">
+            <h3>Performance Summary</h3>
+            <div id="summaryContent" class="stat-grid"></div>
+        </div>
+        
+        <div class="button-group">
+            <button id="sendIndividualBtn" class="individual-btn" onclick="sendIndividualEmail()" disabled>
+                Send Report to Selected Hitter
+            </button>
+            <button id="sendBulkBtn" class="bulk-btn" onclick="sendBulkEmails()" disabled>
+                Send Reports to All Matched Hitters
+            </button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <p>Loading...</p>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+        
+        <div id="stats" class="stats-section"></div>
+        
+        <div id="email-results" class="email-results" style="display: none;">
+            <div id="email-summary"></div>
+            <div id="email-details"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentDate = '';
+        let currentHitters = [];
+        let selectedHitter = null;
+        let hitterInfo = {}; // Store hitter info including email
+        
+        // DOM elements
+        const dateSelect = document.getElementById('dateSelect');
+        const hitterSelect = document.getElementById('hitterSelect');
+        const sendIndividualBtn = document.getElementById('sendIndividualBtn');
+        const sendBulkBtn = document.getElementById('sendBulkBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const success = document.getElementById('success');
+        const statsDiv = document.getElementById('stats');
+        const selectedHitterInfo = document.getElementById('selectedHitterInfo');
+        const hitterDetails = document.getElementById('hitterDetails');
+        const hitterSummary = document.getElementById('hitterSummary');
+        const summaryContent = document.getElementById('summaryContent');
+        const emailResults = document.getElementById('email-results');
+        const emailSummary = document.getElementById('email-summary');
+        const emailDetails = document.getElementById('email-details');
+        
+        // Utility functions
+        function showLoading() {
+            loading.style.display = 'block';
+        }
+        
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+        
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+            success.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            success.textContent = message;
+            success.style.display = 'block';
+            error.style.display = 'none';
+        }
+        
+        function hideMessages() {
+            error.style.display = 'none';
+            success.style.display = 'none';
+        }
+        
+        // API functions
+        async function fetchDates() {
+            try {
+                const response = await fetch('/api/dates');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data.dates;
+            } catch (err) {
+                console.error('Error fetching dates:', err);
+                throw err;
+            }
+        }
+        
+        async function fetchMatchedHitters(date) {
+            try {
+                const response = await fetch(`/api/matched-hitters?date=${encodeURIComponent(date)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data.hitters;
+            } catch (err) {
+                console.error('Error fetching matched hitters:', err);
+                throw err;
+            }
+        }
+        
+        async function fetchHitterSummary(date, hitterName) {
+            try {
+                const response = await fetch(`/api/hitter-summary?date=${encodeURIComponent(date)}&hitter=${encodeURIComponent(hitterName)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (err) {
+                console.error('Error fetching hitter summary:', err);
+                throw err;
+            }
+        }
+        
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (err) {
+                console.error('Error fetching stats:', err);
+                throw err;
+            }
+        }
+        
+        async function sendIndividualEmailAPI(date, hitterName, hitterEmail) {
+            try {
+                const response = await fetch('/api/send-individual-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        date: date,
+                        hitter_name: hitterName,
+                        hitter_email: hitterEmail
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (err) {
+                console.error('Error sending individual email:', err);
+                throw err;
+            }
+        }
+        
+        async function sendBulkEmailsAPI(date) {
+            try {
+                const response = await fetch('/api/send-emails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        date: date
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (err) {
+                console.error('Error sending bulk emails:', err);
+                throw err;
+            }
+        }
+        
+        // UI functions
+        function populateDateSelect(dates) {
+            dateSelect.innerHTML = '<option value="">Select a date...</option>';
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                dateSelect.appendChild(option);
+            });
+        }
+        
+        function populateHitterSelect(hitters) {
+            hitterSelect.innerHTML = '<option value="">Select a hitter...</option>';
+            hitters.forEach((hitter, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${hitter.name} (${hitter.email || 'No email'})`;
+                hitterSelect.appendChild(option);
+                
+                // Store hitter info for later use
+                hitterInfo[index] = hitter;
+            });
+            hitterSelect.disabled = false;
+        }
+        
+        function displayHitterDetails(hitter) {
+            hitterDetails.innerHTML = `
+                <div class="hitter-detail">
+                    <strong>Name:</strong> ${hitter.name}
+                </div>
+                <div class="hitter-detail">
+                    <strong>Email:</strong> ${hitter.email || 'No email available'}
+                </div>
+                <div class="hitter-detail">
+                    <strong>Event:</strong> ${hitter.event || 'N/A'}
+                </div>
+                <div class="hitter-detail">
+                    <strong>Type:</strong> ${hitter.type || 'N/A'}
+                </div>
+                <div class="hitter-detail">
+                    <strong>Date:</strong> ${currentDate}
+                </div>
+            `;
+            selectedHitterInfo.style.display = 'block';
+        }
+        
+        function displayHitterSummary(summary) {
+            summaryContent.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">At-Bats</div>
+                    <div class="stat-value">${summary.total_abs}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Exit Velocity</div>
+                    <div class="stat-value exit-velo">${summary.avg_exit_velo} mph</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Exit Velocity</div>
+                    <div class="stat-value exit-velo">${summary.max_exit_velo} mph</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Launch Angle</div>
+                    <div class="stat-value launch-angle">${summary.avg_launch_angle}°</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Distance</div>
+                    <div class="stat-value distance">${summary.max_distance} ft</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Hits</div>
+                    <div class="stat-value">${summary.hits}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Batting Avg</div>
+                    <div class="stat-value batting-avg">${summary.avg}</div>
+                </div>
+            `;
+            hitterSummary.style.display = 'block';
+        }
+        
+        function displayStats(stats) {
+            const matching = stats.matching_stats;
+            
+            statsDiv.innerHTML = `
+                <h3>Name Matching Analysis (Hitting Only)</h3>
+                <p><strong>Total Hitting Prospects in Info Table:</strong> ${matching.total_in_info}</p>
+                <p><strong>Total Hitters in TestTwo Table:</strong> ${matching.total_in_test}</p>
+                <p><strong>Names that Match:</strong> ${matching.matched_names} 
+                   (${((matching.matched_names / matching.total_in_info) * 100).toFixed(1)}%)</p>
+                <p><strong>Matched with Email:</strong> ${matching.matched_with_email}</p>
+                <p><strong>Matched without Email:</strong> ${matching.matched_without_email}</p>
+            `;
+        }
+        
+        // Event handlers
+        dateSelect.addEventListener('change', async (e) => {
+            const selectedDate = e.target.value;
+            if (!selectedDate) {
+                hitterSelect.disabled = true;
+                hitterSelect.innerHTML = '<option value="">Select a date first</option>';
+                selectedHitterInfo.style.display = 'none';
+                hitterSummary.style.display = 'none';
+                sendIndividualBtn.disabled = true;
+                sendBulkBtn.disabled = true;
+                return;
+            }
+            
+            currentDate = selectedDate;
+            showLoading();
+            hideMessages();
+            
+            try {
+                const hitters = await fetchMatchedHitters(selectedDate);
+                currentHitters = hitters;
+                
+                populateHitterSelect(hitters);
+                
+                // Enable bulk send button
+                sendBulkBtn.disabled = false;
+                
+                showSuccess(`Found ${hitters.length} matched hitters for ${selectedDate}`);
+            } catch (err) {
+                showError(`Error loading hitters: ${err.message}`);
+                hitterSelect.disabled = true;
+                sendBulkBtn.disabled = true;
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        hitterSelect.addEventListener('change', async (e) => {
+            const selectedIndex = e.target.value;
+            if (!selectedIndex) {
+                selectedHitterInfo.style.display = 'none';
+                hitterSummary.style.display = 'none';
+                sendIndividualBtn.disabled = true;
+                selectedHitter = null;
+                return;
+            }
+            
+            selectedHitter = hitterInfo[parseInt(selectedIndex)];
+            displayHitterDetails(selectedHitter);
+            sendIndividualBtn.disabled = false;
+            
+            // Fetch and display hitter summary
+            try {
+                showLoading();
+                const summaryData = await fetchHitterSummary(currentDate, selectedHitter.name);
+                displayHitterSummary(summaryData.summary_stats);
+            } catch (err) {
+                showError(`Error loading hitter summary: ${err.message}`);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Send individual email function
+        async function sendIndividualEmail() {
+            if (!currentDate || !selectedHitter) {
+                showError('Please select a date and hitter first');
+                return;
+            }
+            
+            if (!selectedHitter.email) {
+                showError(`No email address found for ${selectedHitter.name} in the database`);
+                return;
+            }
+            
+            const confirmMessage = `Are you sure you want to send a report to ${selectedHitter.name} (${selectedHitter.email})?`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            showLoading();
+            hideMessages();
+            sendIndividualBtn.disabled = true;
+            
+            try {
+                const result = await sendIndividualEmailAPI(currentDate, selectedHitter.name, selectedHitter.email);
+                
+                if (result.success) {
+                    displayIndividualEmailResult(result);
+                    showSuccess(`Report sent successfully to ${selectedHitter.name}!`);
+                } else {
+                    showError(result.error || 'Failed to send report');
+                }
+            } catch (err) {
+                showError(`Error sending report: ${err.message}`);
+            } finally {
+                hideLoading();
+                sendIndividualBtn.disabled = false;
+            }
+        }
+        
+        // Send bulk emails function
+        async function sendBulkEmails() {
+            if (!currentDate) {
+                showError('Please select a date first');
+                return;
+            }
+            
+            const confirmMessage = `Are you sure you want to send reports to all matched hitters for ${currentDate}?`;
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            showLoading();
+            hideMessages();
+            sendBulkBtn.disabled = true;
+            
+            try {
+                const result = await sendBulkEmailsAPI(currentDate);
+                
+                if (result.success) {
+                    displayBulkEmailResults(result);
+                    showSuccess(`Bulk emails sent! See detailed results below.`);
+                } else {
+                    showError('Failed to send bulk emails');
+                }
+            } catch (err) {
+                showError(`Error sending bulk emails: ${err.message}`);
+            } finally {
+                hideLoading();
+                sendBulkBtn.disabled = false;
+            }
+        }
+        
+        function displayIndividualEmailResult(result) {
+            emailSummary.innerHTML = `
+                <h3>Individual Email Result</h3>
+                <p><strong>Hitter:</strong> ${result.hitter_name}</p>
+                <p><strong>Email:</strong> ${result.email}</p>
+                <p><strong>Date:</strong> ${result.date}</p>
+                <p><strong>At-Bats:</strong> ${result.at_bats}</p>
+                <p><strong>Status:</strong> <span style="color: green; font-weight: bold;">✓ Sent Successfully</span></p>
+            `;
+            
+            emailDetails.innerHTML = '';
+            emailResults.style.display = 'block';
+        }
+        
+        function displayBulkEmailResults(result) {
+            const summary = result.summary;
+            
+            // Display summary
+            emailSummary.innerHTML = `
+                <h3>Bulk Email Results Summary</h3>
+                <h4>${summary.emails_sent_successfully} emails sent successfully</h4>
+                <p><strong>Successfully Sent:</strong> ${summary.emails_sent_successfully}</p>
+                <p><strong>Failed:</strong> ${summary.emails_failed}</p>
+            `;
+            
+            // Display successfully sent emails table
+            let detailsHtml = '';
+            
+            if (result.sent_emails.length > 0) {
+                detailsHtml += `
+                    <h4>Emails Successfully Sent (${result.sent_emails.length})</h4>
+                    <table>
+                        <thead>
+                            <tr style="background-color: #e8f5e8;">
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Event</th>
+                                <th>Type</th>
+                                <th>At-Bats</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                result.sent_emails.forEach(email => {
+                    detailsHtml += `
+                        <tr>
+                            <td>${email.hitter}</td>
+                            <td>${email.email}</td>
+                            <td>${email.event || 'N/A'}</td>
+                            <td>${email.type || 'N/A'}</td>
+                            <td>${email.at_bats}</td>
+                        </tr>
+                    `;
+                });
+                
+                detailsHtml += '</tbody></table>';
+            }
+            
+            emailDetails.innerHTML = detailsHtml;
+            emailResults.style.display = 'block';
+        }
+        
+        // Initialize the application
+        async function init() {
+            showLoading();
+            
+            try {
+                // Load initial data
+                const [dates, stats] = await Promise.all([
+                    fetchDates(),
+                    fetchStats()
+                ]);
+                
+                populateDateSelect(dates);
+                displayStats(stats);
+                
+                showSuccess('Hitting Analytics loaded successfully!');
+            } catch (err) {
+                showError(`Error initializing application: ${err.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
