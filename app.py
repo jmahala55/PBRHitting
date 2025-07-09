@@ -735,7 +735,7 @@ def generate_contact_points_html(contact_data):
                  title="Point {i+1}: Y={y_pos:.2f}, Z={z_pos:.2f}">
             </div>'''
     
-    # Generate CORRECTED overhead view HTML (X vs Z) with proper scaling
+    # Generate overhead view HTML - FLIPPED: Z is horizontal, X is vertical
     overhead_view_html = ""
     
     for i, contact in enumerate(contact_data):
@@ -743,25 +743,15 @@ def generate_contact_points_html(contact_data):
         z_pos = contact.get('ContactPositionZ')
         
         if x_pos is not None and z_pos is not None:
-            # X-axis: Side Position 
-            # Home plate is 17" wide (8.5" each side), convert feet to inches
-            x_inches = x_pos * 12
-            # Scale X from -12" to +12" (giving some margin beyond plate width)
-            # Map to 15% to 85% of plot width
-            x_percent = ((x_inches + 12) / 24) * 70 + 15
+            # Convert to inches - FLIPPED: Z is horizontal, X is vertical
+            z_inches = z_pos * 12  # Z position in inches (horizontal axis)
+            x_inches = x_pos * 12  # X position in inches (vertical axis)
             
-            # Z-axis: Depth Position - CORRECTED SCALING
-            # Convert feet to inches
-            z_inches = z_pos * 12
+            # Horizontal axis (Z): Scale from -18" to +18"
+            x_percent = ((z_inches + 18) / 36) * 80 + 10
             
-            # Define our plot coordinate system:
-            # - We want Z = +18" (1.5 feet in front) to be at top (5% from top)
-            # - We want Z = -18" (home plate tip) to be at bottom (95% from top)
-            # - Z = 0 (front edge of plate) should be at about 55% from top
-            
-            # Total range: +18" to -18" = 36"
-            # Map this to 5% to 95% of plot height (90% total)
-            y_percent = 5 + ((18 - z_inches) / 36) * 90
+            # Vertical axis (X): Scale from -18" to +18" (inverted so higher X is at top)
+            y_percent = 10 + ((18 - x_inches) / 36) * 80
             
             # Clamp to visible area
             x_percent = max(5, min(95, x_percent))
@@ -769,17 +759,21 @@ def generate_contact_points_html(contact_data):
             
             contact_type = get_contact_type(contact)
             
-            # Enhanced tooltip with more data
+            # Enhanced tooltip with Z and X coordinates (flipped order)
             exit_speed = contact.get('ExitSpeed', 'N/A')
             angle = contact.get('Angle', 'N/A')
             distance = contact.get('Distance', 'N/A')
             
-            tooltip = f"Point {i+1}: X={x_pos:.3f}ft ({x_inches:.1f}\"), Z={z_pos:.3f}ft ({z_inches:.1f}\") | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
+            tooltip = f"Point {i+1}: Z={z_inches:.1f}\", X={x_inches:.1f}\" | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
             
             overhead_view_html += f'''
             <div class="contact-point {contact_type}" 
                  style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
                  title="{tooltip}">
+            </div>
+            <div class="contact-point-label" 
+                 style="left: {min(90, x_percent + 2):.1f}%; top: {max(5, y_percent - 2):.1f}%;">
+                ({z_inches:.1f}", {x_inches:.1f}")
             </div>'''
     
     return side_view_html, overhead_view_html
