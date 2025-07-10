@@ -149,16 +149,10 @@ body {
     padding: 20px;
     text-align: center;
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     min-height: 140px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .stat-card.above-average {
@@ -314,6 +308,16 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
+.diagram-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    border-radius: 8px;
+}
+
 .view-title {
     font-size: 16px;
     font-weight: 700;
@@ -334,207 +338,64 @@ body {
     margin-bottom: 15px;
 }
 
-.contact-point {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #dc2626;
-    border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(220,38,38,0.4);
-    transform: translate(-50%, -50%);
-}
-
-.contact-point.line-drive {
-    background: #059669;
-    box-shadow: 0 2px 6px rgba(5,150,105,0.4);
-}
-
-.contact-point.ground-ball {
-    background: #ea580c;
-    box-shadow: 0 2px 6px rgba(234,88,12,0.4);
-}
-
-.contact-point.fly-ball {
-    background: #7c3aed;
-    box-shadow: 0 2px 6px rgba(124,58,237,0.4);
-}
-
-/* Side View - Y vs Z */
-.side-view {
-    position: relative;
-    background: linear-gradient(to right, #f1f5f9 0%, #ffffff 50%, #f1f5f9 100%);
-}
-
-.side-view::before {
-    content: 'Home Plate';
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
-    color: #64748b;
-    font-weight: 600;
-}
-
-/* NEW: Simplified Overhead View with only X and Z coordinates */
-.overhead-view {
-    position: relative;
-    background: #f8fafc;
-}
-
-/* NEW: Bold coordinate axes */
-.coordinate-axes {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: 10;
-}
-
-/* X-axis (horizontal line through center) */
-.x-axis {
-    position: absolute;
-    top: 50%;
-    left: 10%;
-    right: 10%;
-    height: 3px;
-    background: #1a1a1a;
-    transform: translateY(-50%);
-}
-
-/* Z-axis (vertical line through center) */
-.z-axis {
-    position: absolute;
-    left: 50%;
-    top: 10%;
-    bottom: 10%;
-    width: 3px;
-    background: #1a1a1a;
-    transform: translateX(-50%);
-}
-
-/* Axis labels - Bold */
-.axis-label-bold {
-    position: absolute;
-    font-size: 14px;
-    font-weight: 800;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    z-index: 15;
-}
-
-.x-axis-label {
-    bottom: 5px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.z-axis-label {
-    left: 5px;
-    top: 50%;
-    transform: translateY(-50%) rotate(-90deg);
-    transform-origin: center;
-}
-
-/* Tick marks and labels */
-.tick-mark {
-    position: absolute;
-    background: #1a1a1a;
-    z-index: 12;
-}
-
-.tick-mark.x-tick {
-    width: 2px;
-    height: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.tick-mark.z-tick {
-    height: 2px;
-    width: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.tick-label {
-    position: absolute;
-    font-size: 10px;
-    font-weight: 600;
-    color: #374151;
-    z-index: 15;
-}
-
-.x-tick-label {
-    top: 55%;
-    transform: translateX(-50%);
-}
-
-.z-tick-label {
-    left: 45%;
-    transform: translateY(-50%);
-}
-
-/* Grid lines */
-.grid-line {
-    position: absolute;
-    background: rgba(0,0,0,0.1);
-}
-
-.grid-line.vertical {
-    width: 1px;
-    height: 100%;
-}
-
-.grid-line.horizontal {
+/* Strike Zone Specific Styles */
+.strike-zone-container {
     width: 100%;
-    height: 1px;
-}
-
-/* Legend */
-.contact-legend {
+    height: 100%;
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-}
-
-.contact-legend-item {
-    display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    color: #374151;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 8px;
 }
 
-.legend-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+.strike-zone-svg {
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.2));
+    transform-style: preserve-3d;
+    max-width: 100%;
+    max-height: 100%;
 }
 
-.legend-dot.line-drive {
-    background: #059669;
+.strike-zone-edge {
+    fill: none;
+    stroke: #1e293b;
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-linecap: round;
 }
 
-.legend-dot.ground-ball {
-    background: #ea580c;
+.strike-zone-front {
+    fill: rgba(59, 130, 246, 0.08);
+    stroke: #1e293b;
+    stroke-width: 2.5;
 }
 
-.legend-dot.fly-ball {
-    background: #7c3aed;
+.strike-zone-top {
+    fill: rgba(59, 130, 246, 0.12);
+    stroke: #1e293b;
+    stroke-width: 2;
 }
 
-.legend-dot.foul {
-    background: #dc2626;
+.strike-zone-side {
+    fill: rgba(59, 130, 246, 0.06);
+    stroke: #1e293b;
+    stroke-width: 2;
 }
+
+.home-plate {
+    fill: #e2e8f0;
+    stroke: #475569;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.home-plate-top {
+    fill: #f1f5f9;
+    stroke: #475569;
+    stroke-width: 2;
+}
+
+
 
 /* Summary Stats */
 .contact-summary {
@@ -797,11 +658,6 @@ body {
         padding: 8px 6px;
     }
     
-    .stat-card:hover {
-        transform: none;
-        background: inherit !important;
-    }
-    
     .section-header {
         break-after: avoid;
         page-break-after: avoid;
@@ -914,24 +770,48 @@ body {
     <div class="contact-analysis">
         <h2 class="contact-header">Point of Contact Analysis</h2>
         <div class="contact-content">
-            <!-- Side View (Y vs Z) -->
+            <!-- Strike Zone View (Side Perspective) -->
             <div class="view-section">
-                <div class="view-title">Side View (Depth vs Height)</div>
-                <div class="plot-container side-view" id="sideViewPlot">
-                    <!-- Grid lines -->
-                    <div class="grid-line vertical" style="left: 25%;"></div>
-                    <div class="grid-line vertical" style="left: 50%;"></div>
-                    <div class="grid-line vertical" style="left: 75%;"></div>
-                    <div class="grid-line horizontal" style="top: 25%;"></div>
-                    <div class="grid-line horizontal" style="top: 50%;"></div>
-                    <div class="grid-line horizontal" style="top: 75%;"></div>
-                    
-                    <!-- Axis labels -->
-                    <div class="axis-label x-axis">Depth (Y-Position)</div>
-                    <div class="axis-label y-axis">Height (Z-Position)</div>
-                    
-                    <!-- Contact points - Server-generated HTML -->
-                    {{ side_view_points_html|safe }}
+                <div class="view-title">Strike Zone - Side View</div>
+                <div class="plot-container">
+                    <div class="strike-zone-container">
+                        <svg class="strike-zone-svg" width="400" height="280" viewBox="0 0 600 450">
+                            <!-- Home Plate (side view with 3D depth) -->
+                            <!-- Shadow/depth layer (slightly offset) -->
+                            <polygon points="237,402 302,402 382,412 302,422 237,422" fill="#d1d5db" stroke="none" />
+                            
+                            <!-- Main plate surface -->
+                            <polygon points="235,400 300,400 380,410 300,420 235,420" fill="#f1f5f9" stroke="#475569" stroke-width="2" />
+                            
+                            <!-- Strike Zone with 3D depth positioned 1.5 feet above home plate -->
+                            <!-- Back face (depth) -->
+                            <rect x="223" y="115" width="133" height="150" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
+                            
+                            <!-- Top face (3D effect) -->
+                            <polygon points="223,115 233,125 366,125 356,115" fill="rgba(59, 130, 246, 0.12)" stroke="#1e293b" stroke-width="2" />
+                            
+                            <!-- Right side face (3D effect) -->
+                            <polygon points="356,115 366,125 366,275 356,265" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
+                            
+                            <!-- Front face (main view) -->
+                            <rect x="233" y="125" width="133" height="150" fill="rgba(59, 130, 246, 0.08)" stroke="#1e293b" stroke-width="2.5" />
+                            
+                            <!-- Strike zone edges -->
+                            <g fill="none" stroke="#1e293b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+                                <!-- Front rectangle -->
+                                <rect x="233" y="125" width="133" height="150" />
+                                
+                                <!-- Back rectangle -->
+                                <rect x="223" y="115" width="133" height="150" />
+                                
+                                <!-- Connecting lines for 3D effect -->
+                                <line x1="223" y1="115" x2="233" y2="125" />
+                                <line x1="356" y1="115" x2="366" y2="125" />
+                                <line x1="223" y1="265" x2="233" y2="275" />
+                                <line x1="356" y1="265" x2="366" y2="275" />
+                            </g>
+                        </svg>
+                    </div>
                 </div>
                 
                 <div class="contact-summary">
@@ -952,126 +832,62 @@ body {
                 </div>
             </div>
             
-            <!-- Overhead View (Z vs X only) -->
-            <div class="view-section">
-                <div class="view-title">Overhead View (Z vs X Coordinates)</div>
-                <div class="plot-container overhead-view" id="overheadViewPlot">
-                    <!-- Bold coordinate axes -->
-                    <div class="coordinate-axes">
-                        <!-- X-axis (horizontal) -->
-                        <div class="x-axis"></div>
-                        <!-- Z-axis (vertical) -->
-                        <div class="z-axis"></div>
+            <!-- MLB Home Plate Diagram -->
+          <!-- MLB Home Plate Diagram -->
+          <div class="view-section">
+            <div class="view-title">Strike Zone - Overhead View</div>
+            <div class="plot-container">
+                <div class="diagram-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; background: #f1f5f9; border-radius: 8px; overflow: hidden;">
+                    <svg width="100%" height="100%" viewBox="0 0 550 420" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        <!-- Background -->
+                        <rect width="550" height="420" fill="#f1f5f9"/>
                         
-                        <!-- Bold axis labels -->
-                        <div class="axis-label-bold x-axis-label">Z</div>
-                        <div class="axis-label-bold z-axis-label">X</div>
+                        <!-- Reference lines -->
+                        <line x1="100" y1="0" x2="450" y2="0" stroke="#444444" stroke-width="1"/>
+                        <line x1="100" y1="70" x2="450" y2="70" stroke="#444444" stroke-width="1"/>
+                        <line x1="100" y1="140" x2="450" y2="140" stroke="#444444" stroke-width="1"/>
+                        <line x1="100" y1="210" x2="450" y2="210" stroke="#ffffff" stroke-width="2"/>
+                        <line x1="100" y1="280" x2="450" y2="280" stroke="#444444" stroke-width="1"/>
+                        <line x1="100" y1="350" x2="450" y2="350" stroke="#444444" stroke-width="1"/>
+                        <line x1="100" y1="420" x2="450" y2="420" stroke="#444444" stroke-width="1"/>
                         
-                        <!-- Z-axis tick marks and labels (horizontal - every inch from -18" to +18") -->
-                        <!-- Left side (negative Z) -->
-                        <div class="tick-mark x-tick" style="left: 10%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 10%;">-18"</div>
+                        <!-- Home plate pentagon shape -->
+                        <polygon points="135,210 415,210 415,305 275,400 135,305"
+                        fill="white" stroke="black" stroke-width="2"/>
                         
-                        <div class="tick-mark x-tick" style="left: 20%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 20%;">-12"</div>
-                        
-                        <div class="tick-mark x-tick" style="left: 30%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 30%;">-6"</div>
-                        
-                        <div class="tick-mark x-tick" style="left: 40%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 40%;">-3"</div>
-                        
-                        <!-- Center (Z = 0) -->
-                        <div class="tick-mark x-tick" style="left: 50%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 50%;">0"</div>
-                        
-                        <!-- Right side (positive Z) -->
-                        <div class="tick-mark x-tick" style="left: 60%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 60%;">3"</div>
-                        
-                        <div class="tick-mark x-tick" style="left: 70%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 70%;">6"</div>
-                        
-                        <div class="tick-mark x-tick" style="left: 80%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 80%;">12"</div>
-                        
-                        <div class="tick-mark x-tick" style="left: 90%;"></div>
-                        <div class="tick-label x-tick-label" style="left: 90%;">18"</div>
-                        
-                        <!-- X-axis tick marks and labels (vertical - every inch from -18" to +18") -->
-                        <!-- Top (high X) -->
-                        <div class="tick-mark z-tick" style="top: 10%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 10%;">18"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 20%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 20%;">12"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 30%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 30%;">6"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 40%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 40%;">3"</div>
-                        
-                        <!-- Center (X = 0) -->
-                        <div class="tick-mark z-tick" style="top: 50%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 50%;">0"</div>
-                        
-                        <!-- Bottom (low X) -->
-                        <div class="tick-mark z-tick" style="top: 60%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 60%;">-3"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 70%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 70%;">-6"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 80%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 80%;">-12"</div>
-                        
-                        <div class="tick-mark z-tick" style="top: 90%;"></div>
-                        <div class="tick-label z-tick-label" style="top: 90%;">-18"</div>
-                    </div>
-                    
-                    <!-- Contact points - Server-generated HTML -->
-                    {{ overhead_view_points_html|safe }}
+                        <!-- Angle labels -->
+                        <text x="440" y="40" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+18</text>
+                        <text x="440" y="110" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+12</text>
+                        <text x="440" y="180" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+6</text>
+                        <text x="440" y="250" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-6</text>
+                        <text x="440" y="320" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-12</text>
+                        <text x="440" y="390" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-18</text>
+                    </svg>
                 </div>
-                
-                <div class="contact-summary">
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Avg Z Position</div>
-                            <div class="summary-value" id="avgZ">{{ "%.2f"|format(contact_stats.raw_avg_z) if contact_stats else 'N/A' }}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Avg X Position</div>
-                            <div class="summary-value" id="avgX">{{ "%.2f"|format(contact_stats.raw_avg_x) if contact_stats else 'N/A' }}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Contact Points</div>
-                            <div class="summary-value" id="totalContactsOverhead">{{ contact_stats.total_contacts if contact_stats else 'N/A' }}</div>
-                        </div>
+            </div>
+
+            <div class="contact-summary">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">Optimal Zone</div>
+                        <div class="summary-value">10° to 25°</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Line Drives</div>
+                        <div class="summary-value">10-25°</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Home Runs</div>
+                        <div class="summary-value">25-35°</div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Legend -->
-        <div class="contact-legend">
-            <div class="contact-legend-item">
-                <div class="legend-dot line-drive"></div>
-                <span>Line Drives (10-25°)</span>
-            </div>
-            <div class="contact-legend-item">
-                <div class="legend-dot ground-ball"></div>
-                <span>Ground Balls (<10°)</span>
-            </div>
-            <div class="contact-legend-item">
-                <div class="legend-dot fly-ball"></div>
-                <span>Fly Balls (>25°)</span>
-            </div>
-            <div class="contact-legend-item">
-                <div class="legend-dot foul"></div>
-                <span>Foul Balls</span>
-            </div>
+
         </div>
+    </div>
+    
+
     </div>
     {% endif %}
     
@@ -1148,87 +964,14 @@ body {
         console.log('Number of contact points:', contactData.length);
         
         function plotContactPoints() {
-            console.log('plotContactPoints called');
+            console.log('plotContactPoints called for overhead view only');
             
             if (!contactData || contactData.length === 0) {
                 console.log('No contact data available');
                 return;
             }
             
-            // Find min/max values for scaling
-            const xValues = contactData.map(d => d.ContactPositionX).filter(x => x !== null && x !== undefined);
-            const yValues = contactData.map(d => d.ContactPositionY).filter(y => y !== null && y !== undefined);
-            const zValues = contactData.map(d => d.ContactPositionZ).filter(z => z !== null && z !== undefined);
-            
-            console.log('X values:', xValues);
-            console.log('Y values (depth):', yValues);
-            console.log('Z values (height):', zValues);
-            
-            if (xValues.length === 0) {
-                console.log('No valid coordinate values found');
-                return;
-            }
-            
-            const xMin = Math.min(...xValues);
-            const xMax = Math.max(...xValues);
-            const yMin = Math.min(...yValues);
-            const yMax = Math.max(...yValues);
-            const zMin = Math.min(...zValues);
-            const zMax = Math.max(...zValues);
-            
-            console.log('Ranges - X:', xMin, 'to', xMax, '| Y:', yMin, 'to', yMax, '| Z:', zMin, 'to', zMax);
-            
-            // Calculate ranges with minimum range of 2 to avoid division by zero
-            const xRange = Math.max(xMax - xMin, 2);
-            const yRange = Math.max(yMax - yMin, 2);
-            const zRange = Math.max(zMax - zMin, 2);
-            
-            // Add padding (20% of range)
-            const xPadding = xRange * 0.2;
-            const yPadding = yRange * 0.2;
-            const zPadding = zRange * 0.2;
-            
-            // Plot side view (Y vs Z) - Depth vs Height - CORRECTED TO USE INCHES
-            const sideViewPlot = document.getElementById('sideViewPlot');
-            if (sideViewPlot) {
-                console.log('Plotting side view (Depth vs Height)');
-                let pointsAdded = 0;
-                
-                contactData.forEach((contact, index) => {
-                    if (contact.ContactPositionZ !== null && contact.ContactPositionZ !== undefined && 
-                        contact.ContactPositionY !== null && contact.ContactPositionY !== undefined) {
-                        
-                        const dot = document.createElement('div');
-                        dot.className = 'contact-point ' + getContactType(contact);
-                        
-                        // Convert feet to inches for both axes
-                        const yInches = contact.ContactPositionY * 12; // Depth in inches
-                        const zInches = contact.ContactPositionZ * 12; // Height in inches
-                        
-                        // Scale positions using inches, not feet
-                        // X-axis: Depth (Y-position in inches), reasonable range -24" to +24"
-                        const xPercent = ((yInches + 24) / 48) * 70 + 15;
-                        
-                        // Y-axis: Height (Z-position in inches), reasonable range 0" to 60" (inverted)
-                        const yPercent = 85 - ((zInches) / 60) * 70;
-                        
-                        dot.style.left = Math.max(5, Math.min(95, xPercent)) + '%';
-                        dot.style.top = Math.max(5, Math.min(95, yPercent)) + '%';
-                        
-                        // Add tooltip showing both feet and inches
-                        dot.title = `Point ${index + 1}: Depth=${contact.ContactPositionY.toFixed(3)}ft (${yInches.toFixed(1)}"), Height=${contact.ContactPositionZ.toFixed(3)}ft (${zInches.toFixed(1)}")`;
-                        
-                        sideViewPlot.appendChild(dot);
-                        pointsAdded++;
-                        
-                        console.log(`Side view point ${index + 1}: Y=${yInches.toFixed(1)}" Z=${zInches.toFixed(1)}" -> ${xPercent.toFixed(1)}%, ${yPercent.toFixed(1)}%`);
-                    }
-                });
-                
-                console.log(`Added ${pointsAdded} points to side view`);
-            }
-            
-            // Plot overhead view (X vs Z) with coordinate labels - BACK TO NORMAL
+            // Plot overhead view (X vs Z) with coordinate labels
             const overheadViewPlot = document.getElementById('overheadViewPlot');
             if (overheadViewPlot) {
                 console.log('Plotting overhead view (X vs Z) with coordinate labels');
@@ -1241,7 +984,7 @@ body {
                         const dot = document.createElement('div');
                         dot.className = 'contact-point ' + getContactType(contact);
                         
-                        // Convert to inches - NORMAL: X is horizontal, Z is vertical
+                        // Convert to inches - X is horizontal, Z is vertical
                         const xInches = contact.ContactPositionX * 12; // X position in inches (horizontal axis)
                         const zInches = contact.ContactPositionZ * 12; // Z position in inches (vertical axis)
                         
@@ -1254,7 +997,7 @@ body {
                         dot.style.left = Math.max(5, Math.min(95, xPercent)) + '%';
                         dot.style.top = Math.max(5, Math.min(95, yPercent)) + '%';
                         
-                        // Enhanced tooltip with X and Z coordinates in inches (normal order for display)
+                        // Enhanced tooltip with X and Z coordinates in inches
                         const exitSpeed = contact.ExitSpeed || 'N/A';
                         const angle = contact.Angle || 'N/A';
                         const distance = contact.Distance || 'N/A';
@@ -1267,6 +1010,10 @@ body {
                         const label = document.createElement('div');
                         label.className = 'contact-point-label';
                         label.textContent = `(${xInches.toFixed(1)}", ${zInches.toFixed(1)}")`;
+                        label.style.fontSize = '8px';
+                        label.style.color = '#374151';
+                        label.style.fontWeight = '600';
+                        label.style.position = 'absolute';
                         
                         // Position label slightly offset from the dot
                         label.style.left = Math.max(5, Math.min(90, xPercent + 2)) + '%';
