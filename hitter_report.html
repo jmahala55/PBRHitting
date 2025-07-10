@@ -689,6 +689,40 @@ body {
     font-size: 10px;
     opacity: 0.8;
 }
+.legend {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 12px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
 
 @media print {
   /* Prevent the distribution section from splitting across pages */
@@ -971,6 +1005,7 @@ body {
     
     <div class="details-section">
         <h2 class="section-header">Batted Ball Log</h2>
+        <div class="legend"> <div class="legend-title">Row Highlighting Legend</div> <div class="legend-items"> <div class="legend-item"> <div class="legend-color" style="background: #fff8dc; border-left: 4px solid #ffa500;"></div> <span>Elite (100+ mph EV + Barrel)</span> </div> <div class="legend-item"> <div class="legend-color" style="background: #fff0f0; border-left: 4px solid #ff6b6b;"></div> <span>Barrel (95+ mph + 8-32°)</span> </div> <div class="legend-item"> <div class="legend-color" style="background: #f0f8ff; border-left: 3px solid #4a90e2;"></div> <span>High EV (95+ mph)</span> </div> </div> </div>
         <table class="hitting-table">
             <thead>
                 <tr>
