@@ -268,7 +268,7 @@ body {
     color: white;
 }
 
-/* Point of Contact Analysis Section */
+/* Point of Contact Analysis телефона Section */
 .contact-analysis {
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
     border: 2px solid #e2e8f0;
@@ -298,6 +298,13 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 40px;
     min-height: 500px;
+}
+.spray-content {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+    min-height: 300px;
 }
 
 .view-section {
@@ -622,6 +629,16 @@ body {
 }
 
 @media print {
+  /* Prevent the distribution section from splitting across pages */
+  .spray-chart-section {
+    /* older engines */
+    page-break-inside: avoid;
+    /* newer spec */
+    break-inside: avoid;
+  }
+}
+
+@media print {
     @page {
         margin: 0.4in 0.4in 0.8in 0.4in;
         size: A4 landscape;
@@ -833,61 +850,57 @@ body {
             </div>
             
             <!-- MLB Home Plate Diagram -->
-          <!-- MLB Home Plate Diagram -->
-          <div class="view-section">
-            <div class="view-title">Strike Zone - Overhead View</div>
-            <div class="plot-container">
-                <div class="diagram-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; background: #f1f5f9; border-radius: 8px; overflow: hidden;">
-                    <svg width="100%" height="100%" viewBox="0 0 550 420" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        <!-- Background -->
-                        <rect width="550" height="420" fill="#f1f5f9"/>
-                        
-                        <!-- Reference lines -->
-                        <line x1="100" y1="0" x2="450" y2="0" stroke="#444444" stroke-width="1"/>
-                        <line x1="100" y1="70" x2="450" y2="70" stroke="#444444" stroke-width="1"/>
-                        <line x1="100" y1="140" x2="450" y2="140" stroke="#444444" stroke-width="1"/>
-                        <line x1="100" y1="210" x2="450" y2="210" stroke="#ffffff" stroke-width="2"/>
-                        <line x1="100" y1="280" x2="450" y2="280" stroke="#444444" stroke-width="1"/>
-                        <line x1="100" y1="350" x2="450" y2="350" stroke="#444444" stroke-width="1"/>
-                        <line x1="100" y1="420" x2="450" y2="420" stroke="#444444" stroke-width="1"/>
-                        
-                        <!-- Home plate pentagon shape -->
-                        <polygon points="135,210 415,210 415,305 275,400 135,305"
-                        fill="white" stroke="black" stroke-width="2"/>
-                        
-                        <!-- Angle labels -->
-                        <text x="440" y="40" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+18</text>
-                        <text x="440" y="110" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+12</text>
-                        <text x="440" y="180" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+6</text>
-                        <text x="440" y="250" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-6</text>
-                        <text x="440" y="320" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-12</text>
-                        <text x="440" y="390" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-18</text>
-                    </svg>
+            <div class="view-section">
+                <div class="view-title">Strike Zone - Overhead View</div>
+                <div class="plot-container">
+                    <div class="diagram-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; background: #f1f5f9; border-radius: 8px; overflow: hidden;">
+                        <svg width="100%" height="100%" viewBox="0 0 550 420" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            <!-- Background -->
+                            <rect width="550" height="420" fill="#f1f5f9"/>
+                            
+                            <!-- Reference lines -->
+                            <line x1="100" y1="0" x2="450" y2="0" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="70" x2="450" y2="70" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="140" x2="450" y2="140" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="210" x2="450" y2="210" stroke="#ffffff" stroke-width="2"/>
+                            <line x1="100" y1="280" x2="450" y2="280" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="350" x2="450" y2="350" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="420" x2="450" y2="420" stroke="#444444" stroke-width="1"/>
+                            
+                            <!-- Home plate pentagon shape -->
+                            <polygon points="135,210 415,210 415,305 275,400 135,305"
+                            fill="white" stroke="black" stroke-width="2"/>
+                            
+                            <!-- Angle labels -->
+                            <text x="440" y="40" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+18</text>
+                            <text x="440" y="110" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+12</text>
+                            <text x="440" y="180" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">+6</text>
+                            <text x="440" y="250" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-6</text>
+                            <text x="440" y="320" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-12</text>
+                            <text x="440" y="390" fill="black" font-family="Arial" font-size="18" font-weight="bold" text-anchor="end">-18</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="contact-summary">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Optimal Zone</div>
+                            <div class="summary-value">10° to 25°</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Line Drives</div>
+                            <div class="summary-value">10-25°</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Home Runs</div>
+                            <div class="summary-value">25-35°</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="contact-summary">
-                <div class="summary-grid">
-                    <div class="summary-item">
-                        <div class="summary-label">Optimal Zone</div>
-                        <div class="summary-value">10° to 25°</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">Line Drives</div>
-                        <div class="summary-value">10-25°</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-label">Home Runs</div>
-                        <div class="summary-value">25-35°</div>
-                    </div>
-                </div>
-            </div>
         </div>
-
-        </div>
-    </div>
-    
-
     </div>
     {% endif %}
     
@@ -957,9 +970,9 @@ body {
     </div>
 
     
-<div class="spray-chart-section" style="page-break-before: always; min-height: 100vh; padding: 30px;">
+    <div class="spray-chart-section" style="page-break-before: always;">
         <div class="spray-header">
-            <h2 style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: white; margin: 0; font-size: 20px; text-align: center; padding: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); border-radius: 15px;">Spray Chart Analysis</h2>
+            <h2 style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: white; margin: 0; font-size: 18px; text-align: center; padding: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); border-radius: 12px;">Spray Chart Analysis</h2>
         </div>
         
         <div class="spray-content" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 30px; min-height: 500px;">
@@ -1013,58 +1026,58 @@ body {
             </div>
             
             <!-- Spray Chart Statistics -->
-            <div class="spray-stats-container" style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
-                <div class="stats-title" style="font-size: 16px; font-weight: 700; color: #1a1a1a; text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Distribution Analysis</div>
+            <div class="spray-stats-container" style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <div class="stats-title" style="font-size: 14px; font-weight: 700; color: #1a1a1a; text-align: center; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">Distribution Analysis</div>
                 
                 <!-- Pull/Opposite Stats -->
-                <div class="direction-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Directional Tendency</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div style="text-align: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Pull Side</div>
-                            <div id="pullPercentage" style="font-size: 16px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.pull_percentage }}%</div>
+                <div class="direction-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Directional Tendency</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 9px; color: #64748b; margin-bottom: 3px; text-transform: uppercase;">Pull Side</div>
+                            <div id="pullPercentage" style="font-size: 14px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.pull_percentage }}%</div>
                         </div>
-                        <div style="text-align: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Opposite</div>
-                            <div id="oppositePercentage" style="font-size: 16px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.opposite_percentage }}%</div>
+                        <div style="text-align: center; background: white; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 9px; color: #64748b; margin-bottom: 3px; text-transform: uppercase;">Opposite</div>
+                            <div id="oppositePercentage" style="font-size: 14px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.opposite_percentage }}%</div>
                         </div>
                     </div>
                 </div>
     
                 <!-- Ball Type Distribution -->
-                <div class="ball-type-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Ball Type Distribution</h4>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Ground Balls</span>
-                            <span id="groundBallCount" style="font-size: 14px; font-weight: 700; color: #34a853;">{{ spray_stats.ground_balls }}</span>
+                <div class="ball-type-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Ball Type Distribution</h4>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Ground Balls</span>
+                            <span id="groundBallCount" style="font-size: 12px; font-weight: 700; color: #34a853;">{{ spray_stats.ground_balls }}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Line Drives</span>
-                            <span id="lineDriveCount" style="font-size: 14px; font-weight: 700; color: #ea4335;">{{ spray_stats.line_drives }}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Line Drives</span>
+                            <span id="lineDriveCount" style="font-size: 12px; font-weight: 700; color: #ea4335;">{{ spray_stats.line_drives }}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Fly Balls</span>
-                            <span id="flyBallCount" style="font-size: 14px; font-weight: 700; color: #4285f4;">{{ spray_stats.fly_balls }}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Fly Balls</span>
+                            <span id="flyBallCount" style="font-size: 12px; font-weight: 700; color: #4285f4;">{{ spray_stats.fly_balls }}</span>
                         </div>
                     </div>
                 </div>
     
                 <!-- Distance Stats -->
-                <div class="distance-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
-                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Distance Analysis</h4>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Avg Distance</span>
-                            <span id="avgDistance" style="font-size: 14px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.avg_distance }} ft</span>
+                <div class="distance-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                    <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Distance Analysis</h4>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Avg Distance</span>
+                            <span id="avgDistance" style="font-size: 12px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.avg_distance }} ft</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Longest Hit</span>
-                            <span id="maxDistance" style="font-size: 14px; font-weight: 700; color: #7c3aed;">{{ spray_stats.max_distance }} ft</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Longest Hit</span>
+                            <span id="maxDistance" style="font-size: 12px; font-weight: 700; color: #7c3aed;">{{ spray_stats.max_distance }} ft</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">300+ ft Hits</span>
-                            <span id="longHits" style="font-size: 14px; font-weight: 700; color: #059669;">{{ spray_stats.long_hits }}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">300+ ft Hits</span>
+                            <span id="longHits" style="font-size: 12px; font-weight: 700; color: #059669;">{{ spray_stats.long_hits }}</span>
                         </div>
                     </div>
                 </div>
@@ -1072,103 +1085,6 @@ body {
         </div>
     </div>
 
-    <script>
-        // Contact point data will be passed from the backend
-        const contactData = {{ contact_data|tojsonfilter if contact_data else '[]' }};
-        
-        console.log('Contact data loaded:', contactData);
-        console.log('Number of contact points:', contactData.length);
-        
-        function plotContactPoints() {
-            console.log('plotContactPoints called for overhead view only');
-            
-            if (!contactData || contactData.length === 0) {
-                console.log('No contact data available');
-                return;
-            }
-            
-            // Plot overhead view (X vs Z) with coordinate labels
-            const overheadViewPlot = document.getElementById('overheadViewPlot');
-            if (overheadViewPlot) {
-                console.log('Plotting overhead view (X vs Z) with coordinate labels');
-                let pointsAdded = 0;
-                
-                contactData.forEach((contact, index) => {
-                    if (contact.ContactPositionX !== null && contact.ContactPositionX !== undefined && 
-                        contact.ContactPositionZ !== null && contact.ContactPositionZ !== undefined) {
-                        
-                        const dot = document.createElement('div');
-                        dot.className = 'contact-point ' + getContactType(contact);
-                        
-                        // Convert to inches - X is horizontal, Z is vertical
-                        const xInches = contact.ContactPositionX * 12; // X position in inches (horizontal axis)
-                        const zInches = contact.ContactPositionZ * 12; // Z position in inches (vertical axis)
-                        
-                        // Horizontal axis (X): Scale from -18" to +18"
-                        const xPercent = ((xInches + 18) / 36) * 80 + 10;
-                        
-                        // Vertical axis (Z): Scale from -18" to +18" (inverted so higher Z is at top)
-                        const yPercent = 10 + ((18 - zInches) / 36) * 80;
-                        
-                        dot.style.left = Math.max(5, Math.min(95, xPercent)) + '%';
-                        dot.style.top = Math.max(5, Math.min(95, yPercent)) + '%';
-                        
-                        // Enhanced tooltip with X and Z coordinates in inches
-                        const exitSpeed = contact.ExitSpeed || 'N/A';
-                        const angle = contact.Angle || 'N/A';
-                        const distance = contact.Distance || 'N/A';
-                        
-                        dot.title = `Point ${index + 1}: X=${xInches.toFixed(1)}", Z=${zInches.toFixed(1)}" | EV: ${exitSpeed} mph | LA: ${angle}° | Dist: ${distance} ft`;
-                        
-                        overheadViewPlot.appendChild(dot);
-                        
-                        // Add coordinate label next to the point (X, Z format)
-                        const label = document.createElement('div');
-                        label.className = 'contact-point-label';
-                        label.textContent = `(${xInches.toFixed(1)}", ${zInches.toFixed(1)}")`;
-                        label.style.fontSize = '8px';
-                        label.style.color = '#374151';
-                        label.style.fontWeight = '600';
-                        label.style.position = 'absolute';
-                        
-                        // Position label slightly offset from the dot
-                        label.style.left = Math.max(5, Math.min(90, xPercent + 2)) + '%';
-                        label.style.top = Math.max(5, Math.min(90, yPercent - 2)) + '%';
-                        
-                        overheadViewPlot.appendChild(label);
-                        pointsAdded++;
-                        
-                        console.log(`Overhead point ${index + 1}: X=${xInches.toFixed(1)}" Z=${zInches.toFixed(1)}" -> ${xPercent.toFixed(1)}%, ${yPercent.toFixed(1)}%`);
-                    }
-                });
-                
-                console.log(`Added ${pointsAdded} points with coordinate labels to overhead view (X vs Z)`);
-            }
-        }
-        
-        function getContactType(contact) {
-            // Determine contact type based on launch angle
-            const angle = contact.Angle;
-            if (angle === null || angle === undefined) return 'foul';
-            
-            if (angle < 10) return 'ground-ball';
-            if (angle >= 10 && angle <= 25) return 'line-drive';
-            if (angle > 25) return 'fly-ball';
-            return 'foul';
-        }
-        
-        // Initialize plots when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing plots');
-            plotContactPoints();
-        });
-        
-        // Also try after a short delay in case of timing issues
-        setTimeout(function() {
-            console.log('Delayed plot initialization');
-            plotContactPoints();
-        }, 1000);
-    </script>
 
     <div class="footer">
         <img src="static/pbr.png" alt="PBR Logo" class="footer-logo">
