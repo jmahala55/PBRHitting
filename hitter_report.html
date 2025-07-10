@@ -689,6 +689,48 @@ body {
     font-size: 10px;
     opacity: 0.8;
 }
+
+.contact-point {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+.contact-point.ground-ball {
+    background-color: #34a853;
+}
+
+.contact-point.line-drive {
+    background-color: #191970;
+}
+
+.contact-point.fly-ball {
+    background-color: #4285f4;
+}
+
+.contact-point.unknown {
+    background-color: #666666;
+}
+
+
+
+/* SVG Contact Points */
+#contactPoints circle {
+    cursor: pointer;
+}
+
+#contactPoints circle:hover {
+    opacity: 1;
+    stroke-width: 2;
+}
+
+#contactPoints text {
+    pointer-events: none;
+}
 .legend {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -884,66 +926,120 @@ body {
         <h2 class="contact-header">Point of Contact Analysis</h2>
         <div class="contact-content">
             <!-- Strike Zone View (Side Perspective) -->
-            <div class="view-section">
-                <div class="view-title">Strike Zone - Side View</div>
-                <div class="plot-container">
-                    <div class="strike-zone-container">
-                        <svg class="strike-zone-svg" width="400" height="280" viewBox="0 0 600 450">
-                            <!-- Home Plate (side view with 3D depth) -->
-                            <!-- Shadow/depth layer (slightly offset) -->
-                            <polygon points="237,402 302,402 382,412 302,422 237,422" fill="#d1d5db" stroke="none" />
-                            
-                            <!-- Main plate surface -->
-                            <polygon points="235,400 300,400 380,410 300,420 235,420" fill="#f1f5f9" stroke="#475569" stroke-width="2" />
-                            
-                            <!-- Strike Zone with 3D depth positioned 1.5 feet above home plate -->
-                            <!-- Back face (depth) -->
-                            <rect x="223" y="115" width="133" height="150" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
-                            
-                            <!-- Top face (3D effect) -->
-                            <polygon points="223,115 233,125 366,125 356,115" fill="rgba(59, 130, 246, 0.12)" stroke="#1e293b" stroke-width="2" />
-                            
-                            <!-- Right side face (3D effect) -->
-                            <polygon points="356,115 366,125 366,275 356,265" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
-                            
-                            <!-- Front face (main view) -->
-                            <rect x="233" y="125" width="133" height="150" fill="rgba(59, 130, 246, 0.08)" stroke="#1e293b" stroke-width="2.5" />
-                            
-                            <!-- Strike zone edges -->
-                            <g fill="none" stroke="#1e293b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-                                <!-- Front rectangle -->
-                                <rect x="233" y="125" width="133" height="150" />
-                                
-                                <!-- Back rectangle -->
-                                <rect x="223" y="115" width="133" height="150" />
-                                
-                                <!-- Connecting lines for 3D effect -->
-                                <line x1="223" y1="115" x2="233" y2="125" />
-                                <line x1="356" y1="115" x2="366" y2="125" />
-                                <line x1="223" y1="265" x2="233" y2="275" />
-                                <line x1="356" y1="265" x2="366" y2="275" />
-                            </g>
-                        </svg>
-                    </div>
-                </div>
+<!-- Strike Zone View (Side Perspective) -->
+<div class="view-section">
+    <div class="view-title">Strike Zone - Side View</div>
+    <div class="plot-container">
+        <div class="strike-zone-container">
+            <svg class="strike-zone-svg" width="400" height="380" viewBox="0 0 600 550">
+                <!-- Home Plate (side view with 3D depth) -->
+                <!-- Shadow/depth layer (slightly offset) -->
+                <polygon points="237,402 302,402 382,412 302,422 237,422" fill="#d1d5db" stroke="none" />
                 
-                <div class="contact-summary">
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Avg Depth</div>
-                            <div class="summary-value" id="avgDepth">{{ contact_stats.avg_depth if contact_stats else 'N/A' }}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Avg Height</div>
-                            <div class="summary-value" id="avgHeight">{{ contact_stats.avg_height if contact_stats else 'N/A' }}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Contact Points</div>
-                            <div class="summary-value" id="totalContacts">{{ contact_stats.total_contacts if contact_stats else 'N/A' }}</div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Main plate surface -->
+                <polygon points="235,400 300,400 380,410 300,420 235,420" fill="#f1f5f9" stroke="#475569" stroke-width="2" />
+                
+                <!-- Strike Zone with 3D depth positioned 1.5 feet above home plate -->
+                <!-- Back face (depth) -->
+                <rect x="223" y="115" width="133" height="150" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
+                
+                <!-- Top face (3D effect) -->
+                <polygon points="223,115 233,125 366,125 356,115" fill="rgba(59, 130, 246, 0.12)" stroke="#1e293b" stroke-width="2" />
+                
+                <!-- Right side face (3D effect) -->
+                <polygon points="356,115 366,125 366,275 356,265" fill="rgba(59, 130, 246, 0.06)" stroke="#1e293b" stroke-width="2" />
+                
+                <!-- Front face (main view) -->
+                <rect x="233" y="125" width="133" height="150" fill="rgba(59, 130, 246, 0.08)" stroke="#1e293b" stroke-width="2.5" />
+                
+                <!-- Strike zone edges -->
+                <g fill="none" stroke="#1e293b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+                    <!-- Front rectangle -->
+                    <rect x="233" y="125" width="133" height="150" />
+                    
+                    <!-- Back rectangle -->
+                    <rect x="223" y="115" width="133" height="150" />
+                    
+                    <!-- Connecting lines for 3D effect -->
+                    <line x1="223" y1="115" x2="233" y2="125" />
+                    <line x1="356" y1="115" x2="366" y2="125" />
+                    <line x1="223" y1="265" x2="233" y2="275" />
+                    <line x1="356" y1="265" x2="366" y2="275" />
+                </g>
+                
+                <!-- Contact Points - Generated server-side -->
+                <g id="contactPoints">
+                    {{ side_view_points_html|safe }}
+                </g>
+                
+                <!-- Debug Number Line -->
+                <line x1="15" y1="200" x2="365" y2="200" stroke="#1e293b" stroke-width="2"/>
+                
+                <!-- Zone boundaries on number line -->
+                <!-- Range: +25 to -17 (42 inch total range) -->
+                <!-- Front of zone (Z=0) at position: 100 + (25 - 0) / 42 * 350 = 308 -->
+                <!-- Front of zone (Z=0) at position: 20 + (25 - 0) / 42 * 350 = 228 -->
+<!-- Front of zone (Z=0) at position: 15 + (25 - 0) / 42 * 350 = 223 -->
+<line x1="223" y1="192" x2="223" y2="208" stroke="#ff0000" stroke-width="3"/>
+<text x="223" y="225" font-family="Arial" font-size="12" fill="#ff0000" text-anchor="middle" font-weight="bold">0 (Front)</text>
+
+<!-- Back of zone (Z=-17) at position: 15 + (25 - (-17)) / 42 * 350 = 365 -->
+<line x1="365" y1="192" x2="365" y2="208" stroke="#ff0000" stroke-width="3"/>
+<text x="365" y="225" font-family="Arial" font-size="12" fill="#ff0000" text-anchor="middle" font-weight="bold">-17 (Back)</text>
+                
+               <!-- +25 at x=15 -->
+<line x1="15" y1="197" x2="15" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="15" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">25</text>
+
+<!-- +20 at x=57 -->
+<line x1="57" y1="197" x2="57" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="57" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">20</text>
+
+<!-- +15 at x=98 -->
+<line x1="98" y1="197" x2="98" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="98" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">15</text>
+
+<!-- +10 at x=140 -->
+<line x1="140" y1="197" x2="140" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="140" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">10</text>
+
+<!-- +5 at x=182 -->
+<line x1="182" y1="197" x2="182" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="182" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">5</text>
+
+<!-- -5 at x=265 -->
+<line x1="265" y1="197" x2="265" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="265" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">-5</text>
+
+<!-- -10 at x=307 -->
+<line x1="307" y1="197" x2="307" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="307" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">-10</text>
+
+<!-- -15 at x=348 -->
+<line x1="348" y1="197" x2="348" y2="203" stroke="#64748b" stroke-width="1"/>
+<text x="348" y="218" font-family="Arial" font-size="10" fill="#64748b" text-anchor="middle">-15</text>
+
+            </svg>
+        </div>
+    </div>
+    
+    <div class="contact-summary">
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Avg Depth</div>
+                <div class="summary-value" id="avgDepth">{{ contact_stats.avg_depth if contact_stats else 'N/A' }}</div>
             </div>
+            <div class="summary-item">
+                <div class="summary-label">Avg Height</div>
+                <div class="summary-value" id="avgHeight">{{ contact_stats.avg_height if contact_stats else 'N/A' }}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Contact Points</div>
+                <div class="summary-value" id="totalContacts">{{ contact_stats.total_contacts if contact_stats else 'N/A' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- MLB Home Plate Diagram -->
             <div class="view-section">
@@ -961,7 +1057,7 @@ body {
                             <line x1="100" y1="210" x2="450" y2="210" stroke="#ffffff" stroke-width="2"/>
                             <line x1="100" y1="280" x2="450" y2="280" stroke="#444444" stroke-width="1"/>
                             <line x1="100" y1="350" x2="450" y2="350" stroke="#444444" stroke-width="1"/>
-                            <line x1="100" y1="420" x2="450" y2="420" stroke="#444444" stroke-width="1"/>
+                            <line x1="100" y1="420" x2="450" y2="420" stroke="black" stroke-width="2"/>
                             
                             <!-- Home plate pentagon shape -->
                             <polygon points="135,210 415,210 415,305 275,400 135,305"

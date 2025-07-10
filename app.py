@@ -461,7 +461,7 @@ def get_hitter_competition_level(hitter_name):
         return 'D1'  # Default to D1 on error
 
 def get_college_hitting_averages(comparison_level='D1'):
-    """Get college baseball hitting averages for comparison - fixed version"""
+    """Get college baseball hitting averages for comparison - fixed version with proper max velo calculation"""
     try:
         # Determine the WHERE clause based on comparison level
         if comparison_level == 'SEC':
@@ -473,25 +473,44 @@ def get_college_hitting_averages(comparison_level='D1'):
         
         print(f"Querying college hitting averages for: {comparison_level} with filter: {level_filter}")
         
-        # Fixed query without ambiguous column references
+        # Fixed query with proper max exit velo calculation grouped by batter
         query = f"""
+        WITH batter_max_velos AS (
+            SELECT 
+                Batter,
+                MAX(CASE WHEN ExitSpeed <= 120 THEN ExitSpeed ELSE NULL END) as max_exit_velo
+            FROM `NCAABaseball.2025Final` t
+            WHERE {level_filter}
+            AND t.ExitSpeed IS NOT NULL
+            AND t.ExitSpeed > 0
+            GROUP BY Batter
+        ),
+        all_batted_balls AS (
+            SELECT 
+                t.ExitSpeed,
+                t.Angle
+            FROM `NCAABaseball.2025Final` t
+            WHERE {level_filter}
+            AND t.ExitSpeed IS NOT NULL
+            AND t.ExitSpeed > 0
+            AND t.ExitSpeed <= 120  -- Filter out unrealistic values
+        )
         SELECT 
-            AVG(t.ExitSpeed) as avg_exit_velo,
-            MAX(t.ExitSpeed) as max_exit_velo,
-            APPROX_QUANTILES(t.ExitSpeed, 100)[OFFSET(90)] as percentile_90_exit_velo,
+            AVG(abb.ExitSpeed) as avg_exit_velo,
+            AVG(bmv.max_exit_velo) as max_exit_velo,
+            APPROX_QUANTILES(abb.ExitSpeed, 100)[OFFSET(90)] as percentile_90_exit_velo,
             AVG(CASE 
-                WHEN t.ExitSpeed >= 95 AND t.Angle IS NOT NULL AND t.Angle >= 8 AND t.Angle <= 32 
+                WHEN abb.ExitSpeed >= 95 AND abb.Angle IS NOT NULL AND abb.Angle >= 8 AND abb.Angle <= 32 
                 THEN 1 ELSE 0 
             END) * 100 as barrel_rate,
             AVG(CASE 
-                WHEN t.ExitSpeed >= 95 
+                WHEN abb.ExitSpeed >= 95 
                 THEN 1 ELSE 0 
             END) * 100 as hardhit_rate,
-            COUNT(*) as total_batted_balls
-        FROM `NCAABaseball.2025Final` t
-        WHERE {level_filter}
-        AND t.ExitSpeed IS NOT NULL
-        AND t.ExitSpeed > 0
+            COUNT(abb.ExitSpeed) as total_batted_balls,
+            COUNT(DISTINCT bmv.Batter) as total_batters
+        FROM all_batted_balls abb
+        CROSS JOIN batter_max_velos bmv
         """
         
         result = client.query(query)
@@ -506,7 +525,8 @@ def get_college_hitting_averages(comparison_level='D1'):
                 'percentile_90_exit_velo': float(row.percentile_90_exit_velo) if row.percentile_90_exit_velo else None,
                 'barrel_rate': float(row.barrel_rate) if row.barrel_rate else None,
                 'hardhit_rate': float(row.hardhit_rate) if row.hardhit_rate else None,
-                'total_batted_balls': int(row.total_batted_balls)
+                'total_batted_balls': int(row.total_batted_balls),
+                'total_batters': int(row.total_batters) if hasattr(row, 'total_batters') else None
             }
             print(f"Returning college data: {college_data}")
             return college_data
@@ -678,103 +698,146 @@ def generate_contact_points_html(contact_data):
     if not contact_data:
         return "", ""
     
-    # Find min/max values for scaling (keep existing for side view)
-    x_values = [d['ContactPositionX'] for d in contact_data if d['ContactPositionX'] is not None]
-    y_values = [d['ContactPositionY'] for d in contact_data if d['ContactPositionY'] is not None]
-    z_values = [d['ContactPositionZ'] for d in contact_data if d['ContactPositionZ'] is not None]
+    # Filter for valid contact data
+    valid_contacts = []
+    for contact in contact_data:
+        y_pos = contact.get('ContactPositionY')  # Height (up/down) in inches
+        z_pos = contact.get('ContactPositionZ')  # Depth (front/back) in inches
+        if y_pos is not None and z_pos is not None:
+            valid_contacts.append(contact)
     
-    if not x_values:
+    if not valid_contacts:
         return "", ""
     
-    x_min, x_max = min(x_values), max(x_values)
-    y_min, y_max = min(y_values), max(y_values)
-    z_min, z_max = min(z_values), max(z_values)
+    # Extract Y and Z values and convert from feet to inches
+    y_values = [d['ContactPositionY'] * 12 for d in valid_contacts]  # Height values in inches
+    z_values = [d['ContactPositionZ'] * 12 for d in valid_contacts]  # Depth values in inches
     
-    # Calculate ranges with minimum range of 2 to avoid division by zero
-    x_range = max(x_max - x_min, 2)
-    y_range = max(y_max - y_min, 2)
-    z_range = max(z_max - z_min, 2)
+    # DEBUG: Print the actual Z values to see what we're working with
+    print(f"DEBUG: ContactPositionZ values (feet): {[d['ContactPositionZ'] for d in valid_contacts]}")
+    print(f"DEBUG: ContactPositionZ values (inches): {z_values}")
+    print(f"DEBUG: ContactPositionY values (inches): {y_values}")
     
-    # Add padding (20% of range)
-    x_padding = x_range * 0.2
-    y_padding = y_range * 0.2
-    z_padding = z_range * 0.2
+    # Use actual data range with some padding for Y (height)
+    y_min = min(y_values) - 3  # Add 3 inches padding below
+    y_max = max(y_values) + 3  # Add 3 inches padding above
     
     # Helper function to determine contact type
     def get_contact_type(contact):
         angle = contact.get('Angle')
         if angle is None:
-            return 'foul'
-        if angle < 10:
+            return 'unknown'
+        if angle < 8:
             return 'ground-ball'
-        elif 10 <= angle <= 25:
+        elif 8 <= angle <= 32:
+            exit_speed = contact.get('ExitSpeed', 0)
+            if exit_speed >= 95:
+                return 'barrel'
             return 'line-drive'
         else:
             return 'fly-ball'
     
-    # Generate side view HTML (Y vs Z) - Keep existing functionality
+    # Generate side view SVG elements using your number line coordinates
     side_view_html = ""
-    for i, contact in enumerate(contact_data):
-        y_pos = contact.get('ContactPositionY')
-        z_pos = contact.get('ContactPositionZ')
-        
-        if y_pos is not None and z_pos is not None:
-            # Scale positions to plot container (15-85% to leave margins)
-            x_percent = ((y_pos - (y_min - y_padding)) / (y_range + 2 * y_padding)) * 70 + 15
-            y_percent = 85 - ((z_pos - (z_min - z_padding)) / (z_range + 2 * z_padding)) * 70  # Invert Y
-            
-            # Clamp to visible area
-            x_percent = max(5, min(95, x_percent))
-            y_percent = max(5, min(95, y_percent))
-            
-            contact_type = get_contact_type(contact)
-            
-            side_view_html += f'''
-            <div class="contact-point {contact_type}" 
-                 style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
-                 title="Point {i+1}: Y={y_pos:.2f}, Z={z_pos:.2f}">
-            </div>'''
     
-    # Generate overhead view HTML - FLIPPED: Z is horizontal, X is vertical
+    for i, contact in enumerate(valid_contacts):
+        y_pos = contact['ContactPositionY'] * 12  # Convert feet to inches
+        z_pos = contact['ContactPositionZ'] * 12  # Convert feet to inches
+        
+        # Map Z (depth) to SVG X coordinate using YOUR NUMBER LINE formula:
+        # x = 15 + (25 - z_value) / 42 * 350
+        svg_x = 15 + (25 - z_pos) / 42 * 350
+        
+        # DEBUG: Print each calculation
+        print(f"DEBUG: Contact {i+1}: Z={z_pos:.1f}in -> SVG X={svg_x:.1f}")
+        
+        # Map Y (height) to SVG Y coordinate within the strike zone area
+        y_range_data = y_max - y_min
+        if y_range_data > 0:
+            y_normalized = (y_pos - y_min) / y_range_data
+            # Map to strike zone height area (y=125 to y=275)
+            svg_y = 275 - (y_normalized * 150)  # 150 is strike zone height
+        else:
+            svg_y = 200  # Middle if all Y values are the same
+        
+        # Clamp Y to reasonable bounds but allow X to extend beyond zone
+        svg_y = max(110, min(285, svg_y))
+        # Don't clamp svg_x - let it show contact outside the zone
+        
+        # Get contact type and styling
+        contact_type = get_contact_type(contact)
+        
+        # Color mapping - same colors regardless of zone
+        color_map = {
+            'ground-ball': '#34a853',
+            'line-drive': '#191970', 
+            'barrel': '#dc2626',
+            'fly-ball': '#4285f4',
+            'unknown': '#666666'
+        }
+        point_color = color_map.get(contact_type, '#666666')
+        
+        # Size based on exit velocity
+        exit_speed = contact.get('ExitSpeed', 0)
+        radius = 6 if exit_speed >= 100 else 5 if exit_speed >= 95 else 4 if exit_speed >= 90 else 3
+        
+        # Determine if contact is inside or outside the strike zone
+        # Zone boundaries: Z=0 (front) at x=223, Z=-17 (back) at x=365
+        is_in_zone = (0 >= z_pos >= -17)
+        
+        # Consistent styling for all contact points
+        stroke_width = 1.5
+        opacity = 0.85
+        
+        # Create tooltip
+        angle = contact.get('Angle', 'N/A')
+        distance = contact.get('Distance', 'N/A')
+        zone_status = "IN ZONE" if is_in_zone else "OUT OF ZONE"
+        
+        tooltip = f"Contact {i+1}: Z={z_pos:.1f}in (depth), Y={y_pos:.1f}in (height) | {zone_status} | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
+        
+        # Generate SVG circle
+        side_view_html += f'''
+            <circle cx="{svg_x:.1f}" cy="{svg_y:.1f}" r="{radius}" 
+                    fill="{point_color}" stroke="white" stroke-width="{stroke_width}" 
+                    opacity="{opacity}" class="contact-point-svg">
+                <title>{tooltip}</title>
+            </circle>
+        '''
+    
+    # Keep original overhead view (unchanged)
     overhead_view_html = ""
+    x_values = [d['ContactPositionX'] for d in contact_data if d['ContactPositionX'] is not None]
     
-    for i, contact in enumerate(contact_data):
-        x_pos = contact.get('ContactPositionX')
-        z_pos = contact.get('ContactPositionZ')
-        
-        if x_pos is not None and z_pos is not None:
-            # Convert to inches - FLIPPED: Z is horizontal, X is vertical
-            z_inches = z_pos * 12  # Z position in inches (horizontal axis)
-            x_inches = x_pos * 12  # X position in inches (vertical axis)
+    if x_values:
+        for i, contact in enumerate(contact_data):
+            x_pos = contact.get('ContactPositionX')
+            z_pos = contact.get('ContactPositionZ')
             
-            # Horizontal axis (Z): Scale from -18" to +18"
-            x_percent = ((z_inches + 18) / 36) * 80 + 10
-            
-            # Vertical axis (X): Scale from -18" to +18" (inverted so higher X is at top)
-            y_percent = 10 + ((18 - x_inches) / 36) * 80
-            
-            # Clamp to visible area
-            x_percent = max(5, min(95, x_percent))
-            y_percent = max(5, min(95, y_percent))
-            
-            contact_type = get_contact_type(contact)
-            
-            # Enhanced tooltip with Z and X coordinates (flipped order)
-            exit_speed = contact.get('ExitSpeed', 'N/A')
-            angle = contact.get('Angle', 'N/A')
-            distance = contact.get('Distance', 'N/A')
-            
-            tooltip = f"Point {i+1}: Z={z_inches:.1f}\", X={x_inches:.1f}\" | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
-            
-            overhead_view_html += f'''
-            <div class="contact-point {contact_type}" 
-                 style="left: {x_percent:.1f}%; top: {y_percent:.1f}%;" 
-                 title="{tooltip}">
-            </div>
-            <div class="contact-point-label" 
-                 style="left: {min(90, x_percent + 2):.1f}%; top: {max(5, y_percent - 2):.1f}%;">
-                ({z_inches:.1f}", {x_inches:.1f}")
-            </div>'''
+            if x_pos is not None and z_pos is not None:
+                # Convert feet to inches
+                x_inches = x_pos * 12
+                z_inches = z_pos * 12
+                
+                # Map to percentage coordinates for overhead view
+                x_percent = ((x_inches + 18) / 36) * 80 + 10
+                z_percent = ((z_inches + 17) / 34) * 80 + 10
+                
+                # Clamp to visible area
+                x_percent = max(5, min(95, x_percent))
+                z_percent = max(5, min(95, z_percent))
+                
+                contact_type = get_contact_type(contact)
+                
+                y_inches = contact.get('ContactPositionY', 0) * 12  # Convert feet to inches
+                tooltip = f"Point {i+1}: X={x_inches:.1f}\" (side), Z={z_inches:.1f}\" (depth), Y={y_inches:.1f}\" (height)"
+                
+                overhead_view_html += f'''
+                <div class="contact-point {contact_type}" 
+                     style="left: {x_percent:.1f}%; top: {z_percent:.1f}%;" 
+                     title="{tooltip}">
+                    <span class="contact-number">{i+1}</span>
+                </div>'''
     
     return side_view_html, overhead_view_html
 
