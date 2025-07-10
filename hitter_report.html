@@ -268,7 +268,7 @@ body {
     color: white;
 }
 
-/* Point of Contact Analysis телефона Section */
+/* Point of Contact Analysis Section */
 .contact-analysis {
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
     border: 2px solid #e2e8f0;
@@ -402,8 +402,6 @@ body {
     stroke-width: 2;
 }
 
-
-
 /* Summary Stats */
 .contact-summary {
     background: #f8fafc;
@@ -519,80 +517,144 @@ body {
 
 /* Exit Velocity Color Coding */
 .exit-velo-high {
-    color: white;
+    color: #dc2626;
     font-weight: 700;
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-    border-radius: 6px;
-    padding: 4px 8px;
-    box-shadow: 0 2px 6px rgba(220,38,38,0.3);
 }
 
 .exit-velo-medium {
-    color: white;
+    color: #ea580c;
     font-weight: 700;
-    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
-    border-radius: 6px;
-    padding: 4px 8px;
-    box-shadow: 0 2px 6px rgba(234,88,12,0.3);
 }
 
 .exit-velo-low {
-    color: white;
-    font-weight: 700;
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    border-radius: 6px;
-    padding: 4px 8px;
-    box-shadow: 0 2px 6px rgba(5,150,105,0.3);
-}
-
-/* Launch Angle Styling */
-.launch-angle-optimal {
     color: #059669;
     font-weight: 700;
-    background: rgba(16,185,129,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
 }
 
-.launch-angle-high {
-    color: #7c3aed;
+/* Row Highlighting - Option 1: Subtle Color Bands */
+
+/* Standard alternating row styling */
+.hitting-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.hitting-table tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+/* Elite Performance Row (100+ EV + Barrel) */
+.elite-row {
+    background: #fff8dc !important;
+    border-left: 4px solid #ffa500 !important;
+}
+
+/* Barrel Row (95+ EV + 8-32 degrees) */
+.barrel-row {
+    background: #fff0f0 !important;
+    border-left: 4px solid #ff6b6b !important;
+}
+
+/* High Exit Velocity Row (95+ mph) */
+.high-ev-row {
+    background: #f0f8ff !important;
+    border-left: 3px solid #4a90e2 !important;
+}
+
+/* At-Bat Number Styling */
+.ab-number {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    color: white !important;
     font-weight: 700;
-    background: rgba(124,58,237,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    margin: 0 auto;
+    font-size: 11px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
-.launch-angle-low {
+/* Elite AB Number for 100+ EV */
+.ab-number-elite {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: white !important;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    margin: 0 auto;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+    border: 2px solid #ffffff;
+}
+
+/* Clean Exit Velocity - Just color, no font weight changes */
+.exit-velo-elite {
+    color: #d97706;
+}
+
+.exit-velo-elite::after {
+    content: " 🔥";
+    font-size: 12px;
+}
+
+.exit-velo-high {
     color: #dc2626;
-    font-weight: 700;
-    background: rgba(220,38,38,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
 }
 
-/* Distance Styling */
-.distance-long {
-    color: #7c3aed;
-    font-weight: 700;
-    background: rgba(124,58,237,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
-}
-
-.distance-medium {
+.exit-velo-medium {
     color: #ea580c;
-    font-weight: 700;
-    background: rgba(234,88,12,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
 }
 
-.distance-short {
+/* Launch Angle Styling - Simplified */
+.launch-angle-optimal {
+    font-weight: 600;
+    color: #059669;
+}
+
+.launch-angle-non-optimal {
     color: #64748b;
+}
+
+/* Batted Ball Type Styling - Clean text only */
+.ball-type-ground {
+    font-weight: 500;
+    color: #34a853;
+}
+
+.ball-type-line {
+    font-weight: 600;
+    color: #191970;
+}
+
+.ball-type-fly {
+    font-weight: 500;
+    color: #4285f4;
+}
+
+/* Enhanced Barrel Styling - Clean */
+.ball-type-barrel {
     font-weight: 700;
-    background: rgba(100,116,139,0.1);
-    padding: 3px 6px;
-    border-radius: 4px;
+    color: #dc2626;
+}
+
+/* Elite Barrel - 100+ EV + 8-32 degrees */
+.ball-type-elite-barrel {
+    font-weight: 800;
+    color: #d97706;
+}
+
+.ball-type-elite-barrel::before {
+    content: "🔥 ";
+    font-size: 14px;
+}
+
+.ball-type-unknown {
+    color: #64748b;
+    font-weight: 500;
 }
 
 .footer {
@@ -917,32 +979,36 @@ body {
                     <th>Launch Angle<br>(degrees)</th>
                     <th>Distance<br>(feet)</th>
                     <th>Direction</th>
-                    <th>Pitch Velocity<br>(mph)</th>
+                    <th>Batted Ball Type</th>
                 </tr>
             </thead>
             <tbody>
                 {% for ab in hitting_data %}
-                <tr>
+                <tr {% if ab.ExitSpeed >= 100 and ab.Angle >= 8 and ab.Angle <= 32 %}class="elite-row"{% elif ab.ExitSpeed >= 95 and ab.Angle >= 8 and ab.Angle <= 32 %}class="barrel-row"{% elif ab.ExitSpeed >= 95 %}class="high-ev-row"{% endif %}>
                     <td>
-                        <div class="ab-number">{{ loop.index }}</div>
+                        {% if ab.ExitSpeed >= 100 %}
+                            <div class="ab-number-elite">{{ loop.index }}</div>
+                        {% else %}
+                            <div class="ab-number">{{ loop.index }}</div>
+                        {% endif %}
                     </td>
                     <td>
-                        {% if ab.ExitSpeed >= 95 %}
+                        {% if ab.ExitSpeed >= 100 %}
+                            <span class="exit-velo-elite">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
+                        {% elif ab.ExitSpeed >= 95 %}
                             <span class="exit-velo-high">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
-                        {% elif ab.ExitSpeed >= 85 %}
+                        {% elif ab.ExitSpeed >= 90 %}
                             <span class="exit-velo-medium">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
                         {% else %}
-                            <span class="exit-velo-low">{{ "%.1f"|format(ab.ExitSpeed) }}</span>
+                            {{ "%.1f"|format(ab.ExitSpeed) }}
                         {% endif %}
                     </td>
                     <td>
                         {% if ab.Angle %}
-                            {% if 10 <= ab.Angle <= 35 %}
+                            {% if 8 <= ab.Angle <= 32 %}
                                 <span class="launch-angle-optimal">{{ "%.1f"|format(ab.Angle) }}°</span>
-                            {% elif ab.Angle > 35 %}
-                                <span class="launch-angle-high">{{ "%.1f"|format(ab.Angle) }}°</span>
                             {% else %}
-                                <span class="launch-angle-low">{{ "%.1f"|format(ab.Angle) }}°</span>
+                                <span class="launch-angle-non-optimal">{{ "%.1f"|format(ab.Angle) }}°</span>
                             {% endif %}
                         {% else %}
                             N/A
@@ -950,19 +1016,31 @@ body {
                     </td>
                     <td>
                         {% if ab.Distance %}
-                            {% if ab.Distance >= 350 %}
-                                <span class="distance-long">{{ "%.0f"|format(ab.Distance) }}</span>
-                            {% elif ab.Distance >= 200 %}
-                                <span class="distance-medium">{{ "%.0f"|format(ab.Distance) }}</span>
-                            {% else %}
-                                <span class="distance-short">{{ "%.0f"|format(ab.Distance) }}</span>
-                            {% endif %}
+                            {{ "%.0f"|format(ab.Distance) }}
                         {% else %}
                             N/A
                         {% endif %}
                     </td>
                     <td>{{ "%.1f"|format(ab.Direction) if ab.Direction else 'N/A' }}</td>
-                    <td>{{ "%.1f"|format(ab.RelSpeed) if ab.RelSpeed else 'N/A' }}</td>
+                    <td>
+                        {% if ab.Angle %}
+                            {% if ab.Angle < 8 %}
+                                <span class="ball-type-ground">Ground Ball</span>
+                            {% elif ab.Angle >= 8 and ab.Angle <= 32 %}
+                                {% if ab.ExitSpeed >= 100 %}
+                                    <span class="ball-type-elite-barrel">Elite Barrel</span>
+                                {% elif ab.ExitSpeed >= 95 %}
+                                    <span class="ball-type-barrel">Barrel</span>
+                                {% else %}
+                                    <span class="ball-type-line">Line Drive</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="ball-type-fly">Fly Ball</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="ball-type-unknown">Unknown</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -984,15 +1062,15 @@ body {
                 <div class="spray-field-container" style="position: relative; width: 100%; height: 450px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                     <div class="legend" style="position: absolute; top: 10px; left: 10px; font-size: 14px; display: flex; gap: 20px; color: #333; z-index: 10;">
                         <span style="display: flex; align-items: center;">
-                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #4285f4; margin-right: 6px;"></span>
+                            <span style="width: 14px; height: 12px; border-radius: 50%; background: #4285f4; margin-right: 6px;"></span>
                             Fly Ball
                         </span>
                         <span style="display: flex; align-items: center;">
-                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #34a853; margin-right: 6px;"></span>
+                            <span style="width: 14px; height: 12px; border-radius: 50%; background: #34a853; margin-right: 6px;"></span>
                             Ground Ball
                         </span>
                         <span style="display: flex; align-items: center;">
-                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ea4335; margin-right: 6px;"></span>
+                            <span style="width: 14px; height: 12px; border-radius: 50%; background: #191970; margin-right: 6px;"></span>
                             Line Drive
                         </span>
                     </div>
@@ -1054,7 +1132,7 @@ body {
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Line Drives</span>
-                            <span id="lineDriveCount" style="font-size: 12px; font-weight: 700; color: #ea4335;">{{ spray_stats.line_drives }}</span>
+                            <span id="lineDriveCount" style="font-size: 12px; font-weight: 700; color: #191970;">{{ spray_stats.line_drives }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
                             <span style="font-size: 9px; color: #64748b; text-transform: uppercase;">Fly Balls</span>

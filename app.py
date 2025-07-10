@@ -946,7 +946,7 @@ def generate_spray_chart_html(spray_chart_data):
                     ground_balls += 1
                 elif 10 <= angle <= 25:
                     ball_type = 'line-drive'
-                    ball_color = '#ea4335'
+                    ball_color = '#191970'
                     line_drives += 1
                 else:
                     ball_type = 'fly-ball'
