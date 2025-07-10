@@ -778,6 +778,246 @@ def generate_contact_points_html(contact_data):
     
     return side_view_html, overhead_view_html
 
+def calculate_spray_chart_stats(hitting_data):
+    """Calculate spray chart specific statistics"""
+    if not hitting_data:
+        return None
+    
+    # Filter for balls with direction and distance data
+    spray_balls = [hit for hit in hitting_data if 
+                   hit.get('Direction') is not None and 
+                   hit.get('Distance') is not None and 
+                   hit.get('Distance') > 0]
+    
+    if not spray_balls:
+        return None
+    
+    # Calculate directional tendencies
+    pull_hits = len([hit for hit in spray_balls if hit.get('Direction', 0) < -5])
+    opposite_hits = len([hit for hit in spray_balls if hit.get('Direction', 0) > 5])
+    center_hits = len(spray_balls) - pull_hits - opposite_hits
+    
+    # Calculate ball type distribution
+    ground_balls = len([hit for hit in spray_balls if hit.get('Angle', 0) < 10])
+    line_drives = len([hit for hit in spray_balls if 10 <= hit.get('Angle', 0) <= 25])
+    fly_balls = len([hit for hit in spray_balls if hit.get('Angle', 0) > 25])
+    
+    # Distance analysis
+    distances = [hit.get('Distance') for hit in spray_balls]
+    avg_distance = sum(distances) / len(distances) if distances else 0
+    max_distance = max(distances) if distances else 0
+    long_hits = len([d for d in distances if d >= 300])
+    
+    return {
+        'total_spray_balls': len(spray_balls),
+        'pull_percentage': round((pull_hits / len(spray_balls)) * 100, 1) if spray_balls else 0,
+        'opposite_percentage': round((opposite_hits / len(spray_balls)) * 100, 1) if spray_balls else 0,
+        'center_percentage': round((center_hits / len(spray_balls)) * 100, 1) if spray_balls else 0,
+        'ground_ball_count': ground_balls,
+        'line_drive_count': line_drives,
+        'fly_ball_count': fly_balls,
+        'avg_distance': round(avg_distance, 1),
+        'max_distance': max_distance,
+        'long_hits_300plus': long_hits
+    }
+
+def get_spray_chart_data(hitter_name, date):
+    """Get spray chart specific data for a hitter and date"""
+    if not client:
+        return []
+    
+    try:
+        query = """
+        SELECT 
+            PitchNo,
+            ExitSpeed,
+            Angle,
+            Distance,
+            Direction,
+            PlayResult
+        FROM `V1PBR.TestTwo`
+        WHERE CAST(Date AS STRING) = @date
+        AND Batter = @hitter
+        AND ExitSpeed IS NOT NULL
+        AND Direction IS NOT NULL 
+        AND Distance IS NOT NULL
+        AND Distance > 0
+        ORDER BY PitchNo
+        """
+        
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("date", "STRING", date),
+                bigquery.ScalarQueryParameter("hitter", "STRING", hitter_name),
+            ]
+        )
+        
+        result = client.query(query, job_config=job_config)
+        spray_data = [dict(row) for row in result]
+        
+        print(f"Spray chart query returned {len(spray_data)} records for {hitter_name}")
+        return spray_data
+        
+    except Exception as e:
+        print(f"Error getting spray chart data: {str(e)}")
+        return []
+    
+
+def calculate_spray_position(direction, distance):
+    """Calculate x,y position for spray chart based on direction and distance - CORRECTED"""
+    import math
+    
+    # Normalize direction to field boundaries (-45° to +45°)
+    field_direction = max(-45, min(45, direction))
+    
+    # Convert to radians
+    angle_rad = math.radians(field_direction)
+    
+    # Based on your visual chart, map distances to radius percentages
+    # Looking at your image: 100ft ≈ 15%, 200ft ≈ 30%, 300ft ≈ 45%, 400ft ≈ 60%
+    if distance <= 100:
+        radius_percent = (distance / 100) * 15  # 0-15% for 0-100ft
+    elif distance <= 200:
+        radius_percent = 15 + ((distance - 100) / 100) * 15  # 15-30% for 100-200ft
+    elif distance <= 300:
+        radius_percent = 30 + ((distance - 200) / 100) * 15  # 30-45% for 200-300ft
+    elif distance <= 400:
+        radius_percent = 45 + ((distance - 300) / 100) * 15  # 45-60% for 300-400ft
+    else:
+        radius_percent = 60 + min((distance - 400) / 100, 1) * 10  # 60-70% for 400ft+
+    
+    # Convert to actual position
+    # Home plate is at center-bottom: x=50%, y=85%
+    home_plate_x = 50
+    home_plate_y = 85
+    
+    # Calculate offset from home plate
+    x_offset = math.sin(angle_rad) * radius_percent
+    y_offset = math.cos(angle_rad) * radius_percent
+    
+    # Apply offset to home plate position
+    x_percent = home_plate_x + x_offset
+    y_percent = home_plate_y - y_offset  # Subtract because y increases downward
+    
+    # Clamp to visible area
+    x_percent = max(5, min(95, x_percent))
+    y_percent = max(5, min(95, y_percent))
+    
+    # Debug output
+    print(f"Distance: {distance}ft, Direction: {direction}° -> Radius: {radius_percent:.1f}% -> Position: ({x_percent:.1f}%, {y_percent:.1f}%)")
+    
+    return x_percent, y_percent
+
+def generate_spray_chart_html(spray_chart_data):
+    """Generate HTML for spray chart balls with corrected positioning"""
+    if not spray_chart_data:
+        return "", {}
+    
+    spray_balls_html = ""
+    
+    # Initialize counters
+    pull_count = 0
+    opposite_count = 0
+    ground_balls = 0
+    line_drives = 0
+    fly_balls = 0
+    total_distance = 0
+    valid_distance_count = 0
+    max_distance = 0
+    long_hits = 0
+    
+    for i, hit in enumerate(spray_chart_data):
+        direction = hit.get('Direction')
+        distance = hit.get('Distance')
+        angle = hit.get('Angle')
+        
+        if (direction is not None and distance is not None and distance > 0):
+            # Calculate position on spray chart using fixed function
+            x, y = calculate_spray_position(direction, distance)
+            
+            # Determine ball type and color based on launch angle
+            ball_color = '#666'  # Default
+            ball_type = 'foul'
+            
+            if angle is not None:
+                if angle < 10:
+                    ball_type = 'ground-ball'
+                    ball_color = '#34a853'
+                    ground_balls += 1
+                elif 10 <= angle <= 25:
+                    ball_type = 'line-drive'
+                    ball_color = '#ea4335'
+                    line_drives += 1
+                else:
+                    ball_type = 'fly-ball'
+                    ball_color = '#4285f4'
+                    fly_balls += 1
+            
+            # Debug info for verification
+            print(f"Ball {i+1}: {distance}ft at {direction}° -> {x:.1f}%, {y:.1f}%")
+            
+            # Generate HTML for this ball
+            spray_balls_html += f'''
+            <div style="position: absolute; 
+                        width: 12px; 
+                        height: 12px; 
+                        border-radius: 50%; 
+                        background: {ball_color}; 
+                        left: {x:.1f}%; 
+                        top: {y:.1f}%; 
+                        z-index: 5; 
+                        border: 1px solid rgba(255,255,255,0.7); 
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);" 
+                 title="Ball {i+1}: {distance}ft, {direction}°, {angle}° LA">
+            </div>'''
+            
+            # Update statistics
+            if direction < -5:
+                pull_count += 1
+            elif direction > 5:
+                opposite_count += 1
+            
+            total_distance += distance
+            valid_distance_count += 1
+            max_distance = max(max_distance, distance)
+            if distance >= 300:
+                long_hits += 1
+    
+    # Calculate percentages
+    total_directional = pull_count + opposite_count + (len(spray_chart_data) - pull_count - opposite_count)
+    pull_percentage = round((pull_count / total_directional) * 100) if total_directional > 0 else 0
+    opposite_percentage = round((opposite_count / total_directional) * 100) if total_directional > 0 else 0
+    avg_distance = round(total_distance / valid_distance_count) if valid_distance_count > 0 else 0
+    
+    # Return both HTML and statistics
+    spray_stats = {
+        'pull_percentage': pull_percentage,
+        'opposite_percentage': opposite_percentage,
+        'ground_balls': ground_balls,
+        'line_drives': line_drives,
+        'fly_balls': fly_balls,
+        'avg_distance': avg_distance,
+        'max_distance': max_distance,
+        'long_hits': long_hits
+    }
+    
+    return spray_balls_html, spray_stats
+
+# Test function to validate positioning against known distances
+def test_spray_positions():
+    """Test function to verify spray chart positioning"""
+    test_distances = [100, 200, 300, 400]
+    test_directions = [-30, 0, 30]  # Pull, center, opposite
+    
+    print("=== SPRAY CHART POSITION TESTING ===")
+    for distance in test_distances:
+        for direction in test_directions:
+            x, y = calculate_spray_position(direction, distance)
+            dir_name = "Pull" if direction < 0 else "Opposite" if direction > 0 else "Center"
+            print(f"{distance}ft {dir_name}: ({x:.1f}%, {y:.1f}%)")
+        print()  # Empty line between distance groups
+
+
 def generate_hitter_pdf(hitter_name, hitting_data, date):
     """Generate a PDF report for the hitter using WeasyPrint"""
     try:
@@ -827,10 +1067,76 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
         
         # Generate contact points HTML for server-side rendering
         side_view_points, overhead_view_points = generate_contact_points_html(contact_data)
+
+        # Get spray chart specific data
+        spray_chart_data = get_spray_chart_data(hitter_name, date)
+
+        # NEW: Generate spray chart HTML and stats server-side
+        spray_balls_html, spray_chart_stats = generate_spray_chart_html(spray_chart_data)
         
         print(f"Generating PDF for {formatted_name} with {len(batted_balls)} batted balls and {len(contact_data)} contact points")
         print(f"Generated {len(side_view_points.split('contact-point')) - 1} side view points")
         print(f"Generated {len(overhead_view_points.split('contact-point')) - 1} overhead view points")
+        print(f"Generated {len(spray_balls_html.split('<div')) - 1} spray chart balls")
+
+        print(f"\n=== DEBUGGING HITTING DATA FOR {hitter_name} ===")
+        print(f"Total records: {len(hitting_data)}")
+        
+        if hitting_data:
+            # Check what fields are available
+            first_record = hitting_data[0]
+            print(f"Available fields: {list(first_record.keys())}")
+            
+            # Check for spray chart specific fields
+            spray_fields = ['Direction', 'Distance', 'Angle', 'ExitSpeed']
+            for field in spray_fields:
+                if field in first_record:
+                    # Count non-null values
+                    non_null_count = len([h for h in hitting_data if h.get(field) is not None])
+                    print(f"{field}: {non_null_count}/{len(hitting_data)} non-null values")
+                    
+                    # Show sample values
+                    sample_values = [h.get(field) for h in hitting_data[:3] if h.get(field) is not None]
+                    print(f"  Sample values: {sample_values}")
+                else:
+                    print(f"{field}: FIELD NOT FOUND")
+            
+            # Check spray chart viability
+            spray_viable = [hit for hit in hitting_data if 
+                           hit.get('Direction') is not None and 
+                           hit.get('Distance') is not None and 
+                           hit.get('Distance', 0) > 0]
+            print(f"Records viable for spray chart: {len(spray_viable)}/{len(hitting_data)}")
+        
+        print("=== END DEBUGGING ===\n")
+
+        # ADD NEW SPRAY CHART DEBUGGING
+        print(f"\n=== SPRAY CHART DEBUG ===")
+        print(f"spray_chart_data length: {len(spray_chart_data) if spray_chart_data else 0}")
+        if spray_chart_data:
+            print(f"First spray chart record: {spray_chart_data[0]}")
+            print(f"spray_chart_data sample fields: {list(spray_chart_data[0].keys()) if spray_chart_data else 'None'}")
+            
+            # Check specific fields
+            for i, record in enumerate(spray_chart_data[:3]):
+                direction = record.get('Direction')
+                distance = record.get('Distance') 
+                angle = record.get('Angle')
+                print(f"Record {i+1}: Direction={direction}, Distance={distance}, Angle={angle}")
+
+        print(f"hitting_data (all records) length: {len(hitting_data) if hitting_data else 0}")
+        print(f"batted_balls length: {len(batted_balls) if batted_balls else 0}")
+        if batted_balls:
+            print(f"First batted ball record keys: {list(batted_balls[0].keys()) if batted_balls else 'None'}")
+            # Check if batted_balls has spray chart fields
+            first_batted = batted_balls[0]
+            print(f"First batted ball Direction: {first_batted.get('Direction')}")
+            print(f"First batted ball Distance: {first_batted.get('Distance')}")
+            print(f"First batted ball Angle: {first_batted.get('Angle')}")
+        
+        # Print spray chart stats
+        print(f"Generated spray chart stats: {spray_chart_stats}")
+        print("=== END SPRAY CHART DEBUG ===\n")
         
         # Read HTML template
         try:
@@ -840,10 +1146,24 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
             print("Error: hitter_report.html not found. Make sure it's in the same directory as app.py")
             return None
         
-        # Custom filter to convert data to JSON for JavaScript (still needed for fallback)
+        # Custom filter to convert data to JSON for JavaScript - FIXED VERSION
         def tojsonfilter(obj):
             import json
-            return json.dumps(obj)
+            from datetime import date, datetime
+            from decimal import Decimal
+            
+            def json_serializer(o):
+                """JSON serializer for objects not serializable by default json code"""
+                if isinstance(o, (date, datetime)):
+                    return o.isoformat()
+                elif isinstance(o, Decimal):
+                    return float(o)
+                elif hasattr(o, '__dict__'):
+                    return o.__dict__
+                else:
+                    return str(o)
+            
+            return json.dumps(obj, default=json_serializer)
         
         # Render template with data using Jinja2
         from jinja2 import Environment
@@ -851,15 +1171,19 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
         env.filters['tojsonfilter'] = tojsonfilter
         template = env.from_string(html_template)
         
+        # UPDATED TEMPLATE RENDERING - Include spray chart HTML and stats
         rendered_html = template.render(
             hitter_name=formatted_name,
             date=date,
             summary_stats=summary_stats,
-            hitting_data=batted_balls,  # Pass filtered data instead of all data
-            contact_data=contact_data,  # Add contact position data (for JavaScript fallback)
-            contact_stats=contact_stats,  # Add contact statistics
-            side_view_points_html=side_view_points,  # Pre-generated HTML points
-            overhead_view_points_html=overhead_view_points  # Pre-generated HTML points
+            hitting_data=batted_balls,  # Use batted balls for table (avoids null errors)
+            spray_chart_data=spray_chart_data,  # Use spray_chart_data for spray chart
+            contact_data=contact_data,
+            contact_stats=contact_stats,
+            spray_stats=spray_chart_stats,  # Use the pre-calculated spray stats
+            spray_balls_html=spray_balls_html,  # Add the pre-generated spray chart HTML
+            side_view_points_html=side_view_points,
+            overhead_view_points_html=overhead_view_points
         )
         
         # Generate PDF using WeasyPrint with proper base_url for static files
@@ -877,7 +1201,7 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
             
             html_doc = weasyprint.HTML(string=rendered_html, base_url=base_url)
             pdf_bytes = html_doc.write_pdf()
-            print(f"PDF generated successfully for {formatted_name} with contact analysis")
+            print(f"PDF generated successfully for {formatted_name} with contact analysis and spray chart")
             return pdf_bytes
         except Exception as e:
             print(f"WeasyPrint error: {str(e)}")

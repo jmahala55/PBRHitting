@@ -956,6 +956,122 @@ body {
         </table>
     </div>
 
+    
+<div class="spray-chart-section" style="page-break-before: always; min-height: 100vh; padding: 30px;">
+        <div class="spray-header">
+            <h2 style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: white; margin: 0; font-size: 20px; text-align: center; padding: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); border-radius: 15px;">Spray Chart Analysis</h2>
+        </div>
+        
+        <div class="spray-content" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 30px; min-height: 500px;">
+            <!-- Spray Chart Container -->
+            <div class="spray-chart-container" style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <div class="chart-title" style="font-size: 16px; font-weight: 700; color: #1a1a1a; text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Batted Ball Distribution</div>
+                
+                <!-- Spray Chart Field -->
+                <div class="spray-field-container" style="position: relative; width: 100%; height: 450px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                    <div class="legend" style="position: absolute; top: 10px; left: 10px; font-size: 14px; display: flex; gap: 20px; color: #333; z-index: 10;">
+                        <span style="display: flex; align-items: center;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #4285f4; margin-right: 6px;"></span>
+                            Fly Ball
+                        </span>
+                        <span style="display: flex; align-items: center;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #34a853; margin-right: 6px;"></span>
+                            Ground Ball
+                        </span>
+                        <span style="display: flex; align-items: center;">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ea4335; margin-right: 6px;"></span>
+                            Line Drive
+                        </span>
+                    </div>
+    
+                    <div class="field" style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; height: 100%;">
+                        <!-- Distance Arc Rings -->
+                        <div style="position: absolute; border: 2px solid rgba(255, 136, 56, 0.3); border-radius: 50%; background: none; left: 50%; transform: translateX(-50%); clip-path: polygon(49% 51%, 0% 0%, 100% 0%); width: 180px; height: 180px; bottom: -50px;"></div>
+                        <div style="position: absolute; border: 2px solid rgba(255, 136, 56, 0.3); border-radius: 50%; background: none; left: 50%; transform: translateX(-50%); clip-path: polygon(49% 51%, 0% 0%, 100% 0%); width: 320px; height: 320px; bottom: -120px;"></div>
+                        <div style="position: absolute; border: 2px solid rgba(255, 136, 56, 0.3); border-radius: 50%; background: none; left: 50%; transform: translateX(-50%); clip-path: polygon(49% 51%, 0% 0%, 100% 0%); width: 460px; height: 460px; bottom: -190px;"></div>
+                        <div style="position: absolute; border: 2px solid rgba(255, 136, 56, 0.3); border-radius: 50%; background: none; left: 50%; transform: translateX(-50%); clip-path: polygon(49% 51%, 0% 0%, 100% 0%); width: 600px; height: 600px; bottom: -260px;"></div>
+    
+                        <!-- Distance Labels -->
+                        <div style="position: absolute; font-size: 12px; color: rgba(255, 136, 56, 1); font-weight: 600; bottom: 110px; left: 280px;">100</div>
+                        <div style="position: absolute; font-size: 12px; color: rgba(255, 136, 56, 1); font-weight: 600; bottom: 180px; left: 200px;">200</div>
+                        <div style="position: absolute; font-size: 12px; color: rgba(255, 136, 56, 1); font-weight: 600; bottom: 250px; left: 120px;">300</div>
+                        <div style="position: absolute; font-size: 12px; color: rgba(255, 136, 56, 1); font-weight: 600; bottom: 320px; left: 40px;">400</div>
+    
+                        <!-- Foul Lines -->
+                        <div style="position: absolute; bottom: 30px; width: 2px; height: 350px; background: rgba(180, 180, 180, 0.6); transform-origin: bottom center; left: 50%; transform: translateX(-50%) rotate(-45deg);"></div>
+                        <div style="position: absolute; bottom: 30px; width: 2px; height: 350px; background: rgba(180, 180, 180, 0.6); transform-origin: bottom center; left: 50%; transform: translateX(-50%) rotate(45deg);"></div>
+    
+                        <!-- Home Plate -->
+                        <div style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px; background: #666; clip-path: polygon(50% 100%, 0 45%, 0 0, 100% 0, 100% 45%);"></div>
+    
+                        <!-- Batted Ball Markers - Pre-generated on server -->
+                        <div id="sprayChartPoints" style="position: relative; width: 100%; height: 100%;">
+                            {{ spray_balls_html|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Spray Chart Statistics -->
+            <div class="spray-stats-container" style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <div class="stats-title" style="font-size: 16px; font-weight: 700; color: #1a1a1a; text-align: center; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;">Distribution Analysis</div>
+                
+                <!-- Pull/Opposite Stats -->
+                <div class="direction-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Directional Tendency</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="text-align: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Pull Side</div>
+                            <div id="pullPercentage" style="font-size: 16px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.pull_percentage }}%</div>
+                        </div>
+                        <div style="text-align: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px; text-transform: uppercase;">Opposite</div>
+                            <div id="oppositePercentage" style="font-size: 16px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.opposite_percentage }}%</div>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Ball Type Distribution -->
+                <div class="ball-type-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Ball Type Distribution</h4>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Ground Balls</span>
+                            <span id="groundBallCount" style="font-size: 14px; font-weight: 700; color: #34a853;">{{ spray_stats.ground_balls }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Line Drives</span>
+                            <span id="lineDriveCount" style="font-size: 14px; font-weight: 700; color: #ea4335;">{{ spray_stats.line_drives }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Fly Balls</span>
+                            <span id="flyBallCount" style="font-size: 14px; font-weight: 700; color: #4285f4;">{{ spray_stats.fly_balls }}</span>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Distance Stats -->
+                <div class="distance-stats" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px;">
+                    <h4 style="margin: 0 0 15px 0; color: #1e293b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Distance Analysis</h4>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Avg Distance</span>
+                            <span id="avgDistance" style="font-size: 14px; font-weight: 700; color: #1a1a1a;">{{ spray_stats.avg_distance }} ft</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">Longest Hit</span>
+                            <span id="maxDistance" style="font-size: 14px; font-weight: 700; color: #7c3aed;">{{ spray_stats.max_distance }} ft</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 11px; color: #64748b; text-transform: uppercase;">300+ ft Hits</span>
+                            <span id="longHits" style="font-size: 14px; font-weight: 700; color: #059669;">{{ spray_stats.long_hits }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Contact point data will be passed from the backend
         const contactData = {{ contact_data|tojsonfilter if contact_data else '[]' }};
