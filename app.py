@@ -460,8 +460,9 @@ def get_hitter_competition_level(hitter_name):
         print(f"Error getting competition level for {hitter_name}: {str(e)}")
         return 'D1'  # Default to D1 on error
 
+
 def get_college_hitting_averages(comparison_level='D1'):
-    """Get college baseball hitting averages for comparison - fixed version with proper max velo calculation"""
+    """Get college baseball hitting averages for comparison - FIXED version without Cartesian product"""
     try:
         # Determine the WHERE clause based on comparison level
         if comparison_level == 'SEC':
@@ -471,71 +472,79 @@ def get_college_hitting_averages(comparison_level='D1'):
         else:
             level_filter = "Level = 'D1'"  # Default to D1
         
-        print(f"Querying college hitting averages for: {comparison_level} with filter: {level_filter}")
+        print(f"Querying FIXED college hitting averages for: {comparison_level} with filter: {level_filter}")
         
-        # Fixed query with proper max exit velo calculation grouped by batter
-        query = f"""
-        WITH batter_max_velos AS (
-            SELECT 
-                Batter,
-                MAX(CASE WHEN ExitSpeed <= 120 THEN ExitSpeed ELSE NULL END) as max_exit_velo
-            FROM `NCAABaseball.2025Final` t
-            WHERE {level_filter}
-            AND t.ExitSpeed IS NOT NULL
-            AND t.ExitSpeed > 0
-            GROUP BY Batter
-        ),
-        all_batted_balls AS (
-            SELECT 
-                t.ExitSpeed,
-                t.Angle
-            FROM `NCAABaseball.2025Final` t
-            WHERE {level_filter}
-            AND t.ExitSpeed IS NOT NULL
-            AND t.ExitSpeed > 0
-            AND t.ExitSpeed <= 120  -- Filter out unrealistic values
-        )
+        # FIXED: Separate queries to avoid Cartesian product
+        
+        # 1. Get average exit velocity and other ball-level metrics
+        ball_metrics_query = f"""
         SELECT 
-            AVG(abb.ExitSpeed) as avg_exit_velo,
-            AVG(bmv.max_exit_velo) as max_exit_velo,
-            APPROX_QUANTILES(abb.ExitSpeed, 100)[OFFSET(90)] as percentile_90_exit_velo,
+            AVG(ExitSpeed) as avg_exit_velo,
+            APPROX_QUANTILES(ExitSpeed, 100)[OFFSET(90)] as percentile_90_exit_velo,
             AVG(CASE 
-                WHEN abb.ExitSpeed >= 95 AND abb.Angle IS NOT NULL AND abb.Angle >= 8 AND abb.Angle <= 32 
+                WHEN ExitSpeed >= 95 AND Angle IS NOT NULL AND Angle >= 8 AND Angle <= 32 
                 THEN 1 ELSE 0 
             END) * 100 as barrel_rate,
             AVG(CASE 
-                WHEN abb.ExitSpeed >= 95 
+                WHEN ExitSpeed >= 95 
                 THEN 1 ELSE 0 
             END) * 100 as hardhit_rate,
-            COUNT(abb.ExitSpeed) as total_batted_balls,
-            COUNT(DISTINCT bmv.Batter) as total_batters
-        FROM all_batted_balls abb
-        CROSS JOIN batter_max_velos bmv
+            COUNT(*) as total_batted_balls
+        FROM `NCAABaseball.2025Final`
+        WHERE {level_filter}
+        AND ExitSpeed IS NOT NULL
+        AND ExitSpeed BETWEEN 60 AND 120  -- Same filtering as percentile function
         """
         
-        result = client.query(query)
-        row = list(result)[0] if result else None
+        # 2. Get max exit velocity per batter, then average those (FIXED)
+        max_velo_query = f"""
+        SELECT 
+            AVG(max_exit_velo) as avg_max_exit_velo,
+            COUNT(*) as total_batters
+        FROM (
+            SELECT 
+                Batter,
+                MAX(CASE WHEN ExitSpeed <= 120 AND ExitSpeed >= 60 THEN ExitSpeed ELSE NULL END) as max_exit_velo
+            FROM `NCAABaseball.2025Final`
+            WHERE {level_filter}
+            AND ExitSpeed IS NOT NULL
+            AND ExitSpeed > 0
+            GROUP BY Batter
+            HAVING COUNT(*) >= 5  -- Same minimum as percentile function
+        )
+        WHERE max_exit_velo IS NOT NULL
+        """
         
-        print(f"Query result: {row}")
+        # Execute both queries separately
+        print(f"Executing ball metrics query...")
+        ball_result = client.query(ball_metrics_query)
+        ball_row = list(ball_result)[0] if ball_result else None
         
-        if row and row.total_batted_balls > 0:
+        print(f"Executing max velocity query...")
+        max_result = client.query(max_velo_query)
+        max_row = list(max_result)[0] if max_result else None
+        
+        print(f"Ball metrics result: {ball_row}")
+        print(f"Max velocity result: {max_row}")
+        
+        if ball_row and max_row and ball_row.total_batted_balls > 0:
             college_data = {
-                'avg_exit_velo': float(row.avg_exit_velo) if row.avg_exit_velo else None,
-                'max_exit_velo': float(row.max_exit_velo) if row.max_exit_velo else None,
-                'percentile_90_exit_velo': float(row.percentile_90_exit_velo) if row.percentile_90_exit_velo else None,
-                'barrel_rate': float(row.barrel_rate) if row.barrel_rate else None,
-                'hardhit_rate': float(row.hardhit_rate) if row.hardhit_rate else None,
-                'total_batted_balls': int(row.total_batted_balls),
-                'total_batters': int(row.total_batters) if hasattr(row, 'total_batters') else None
+                'avg_exit_velo': float(ball_row.avg_exit_velo) if ball_row.avg_exit_velo else None,
+                'max_exit_velo': float(max_row.avg_max_exit_velo) if max_row.avg_max_exit_velo else None,  # FIXED - no more Cartesian product
+                'percentile_90_exit_velo': float(ball_row.percentile_90_exit_velo) if ball_row.percentile_90_exit_velo else None,
+                'barrel_rate': float(ball_row.barrel_rate) if ball_row.barrel_rate else None,
+                'hardhit_rate': float(ball_row.hardhit_rate) if ball_row.hardhit_rate else None,
+                'total_batted_balls': int(ball_row.total_batted_balls),
+                'total_batters': int(max_row.total_batters) if max_row.total_batters else None
             }
-            print(f"Returning college data: {college_data}")
+            print(f"Returning FIXED college data: {college_data}")
             return college_data
         else:
             print(f"No data found for {comparison_level}")
             return None
         
     except Exception as e:
-        print(f"Error getting college hitting averages for {comparison_level}: {str(e)}")
+        print(f"Error getting FIXED college hitting averages for {comparison_level}: {str(e)}")
         import traceback
         traceback.print_exc()
         return None
@@ -777,16 +786,16 @@ def generate_contact_points_html(contact_data):
         }
         point_color = color_map.get(contact_type, '#666666')
         
-        # Size based on exit velocity
+        # FIXED: Uniform size for all contact points
         exit_speed = contact.get('ExitSpeed', 0)
-        radius = 6 if exit_speed >= 100 else 5 if exit_speed >= 95 else 4 if exit_speed >= 90 else 3
+        size = 5  # Uniform size for all points
         
         # Determine if contact is inside or outside the strike zone
         # Zone boundaries: Z=0 (front) at x=223, Z=-17 (back) at x=365
         is_in_zone = (0 >= z_pos >= -17)
         
         # Consistent styling for all contact points
-        stroke_width = 1.5
+        stroke_width = 1
         opacity = 0.85
         
         # Create tooltip
@@ -796,14 +805,25 @@ def generate_contact_points_html(contact_data):
         
         tooltip = f"Contact {i+1}: Z={z_pos:.1f}in (depth), Y={y_pos:.1f}in (height) | {zone_status} | EV: {exit_speed} mph | LA: {angle}° | Dist: {distance} ft"
         
-        # Generate SVG circle
-        side_view_html += f'''
-            <circle cx="{svg_x:.1f}" cy="{svg_y:.1f}" r="{radius}" 
-                    fill="{point_color}" stroke="white" stroke-width="{stroke_width}" 
-                    opacity="{opacity}" class="contact-point-svg">
-                <title>{tooltip}</title>
-            </circle>
-        '''
+        # FIXED: Use squares for 95+ mph, circles for < 95 mph
+        if exit_speed >= 95:
+            # Generate SVG rectangle (square)
+            side_view_html += f'''
+                <rect x="{svg_x - size}" y="{svg_y - size}" width="{size * 2}" height="{size * 2}" 
+                      fill="{point_color}" stroke="rgba(255,255,255,0.8)" stroke-width="{stroke_width}" 
+                      opacity="{opacity}" class="contact-point-uniform">
+                    <title>{tooltip}</title>
+                </rect>
+            '''
+        else:
+            # Generate SVG circle
+            side_view_html += f'''
+                <circle cx="{svg_x:.1f}" cy="{svg_y:.1f}" r="{size}" 
+                        fill="{point_color}" stroke="rgba(255,255,255,0.8)" stroke-width="{stroke_width}" 
+                        opacity="{opacity}" class="contact-point-uniform">
+                    <title>{tooltip}</title>
+                </circle>
+            '''
     
     # Keep original overhead view (unchanged)
     overhead_view_html = ""
@@ -1066,6 +1086,67 @@ def generate_spray_chart_html(spray_chart_data):
     
     return spray_balls_html, spray_stats
 
+def debug_max_exit_velocity_data(comparison_level='D1'):
+    """Debug function to see what's happening with max exit velocity data"""
+    try:
+        if comparison_level == 'SEC':
+            level_filter = "League = 'SEC'"
+        elif comparison_level in ['D1', 'D2', 'D3']:
+            level_filter = f"Level = '{comparison_level}'"
+        else:
+            level_filter = "Level = 'D1'"
+        
+        # Get max velocities per batter
+        query = f"""
+        SELECT 
+            Batter,
+            MAX(CASE WHEN ExitSpeed <= 120 AND ExitSpeed >= 60 THEN ExitSpeed ELSE NULL END) as max_exit_velo
+        FROM `NCAABaseball.2025Final` t
+        WHERE {level_filter}
+        AND t.ExitSpeed IS NOT NULL
+        AND t.ExitSpeed > 0
+        GROUP BY Batter
+        HAVING COUNT(*) >= 5
+        ORDER BY max_exit_velo DESC
+        """
+        
+        result = client.query(query)
+        max_velocities = []
+        for row in result:
+            if row.max_exit_velo is not None:
+                max_velocities.append(float(row.max_exit_velo))
+        
+        # Debug output
+        print(f"\n=== DEBUG: {comparison_level} Max Exit Velocity Data ===")
+        print(f"Total players: {len(max_velocities)}")
+        
+        if max_velocities:
+            sorted_velos = sorted(max_velocities)
+            print(f"Min: {min(max_velocities):.1f} mph")
+            print(f"Max: {max(max_velocities):.1f} mph")
+            print(f"Average: {sum(max_velocities)/len(max_velocities):.1f} mph")
+            print(f"Median: {sorted_velos[len(sorted_velos)//2]:.1f} mph")
+            print(f"95th percentile: {sorted_velos[int(0.95*len(sorted_velos))]:.1f} mph")
+            print(f"90th percentile: {sorted_velos[int(0.90*len(sorted_velos))]:.1f} mph")
+            print(f"75th percentile: {sorted_velos[int(0.75*len(sorted_velos))]:.1f} mph")
+            print(f"50th percentile: {sorted_velos[int(0.50*len(sorted_velos))]:.1f} mph")
+            print(f"25th percentile: {sorted_velos[int(0.25*len(sorted_velos))]:.1f} mph")
+            
+            # Check where 104.8 would rank
+            below_104_8 = sum(1 for v in max_velocities if v < 104.8)
+            percentile_104_8 = (below_104_8 / len(max_velocities)) * 100
+            print(f"104.8 mph percentile: {percentile_104_8:.1f}%")
+            
+            # Show top 10 and bottom 10
+            print(f"Top 10: {sorted_velos[-10:]}")
+            print(f"Bottom 10: {sorted_velos[:10]}")
+        
+        return max_velocities
+        
+    except Exception as e:
+        print(f"Error in debug function: {str(e)}")
+        return []
+
 # Test function to validate positioning against known distances
 def test_spray_positions():
     """Test function to verify spray chart positioning"""
@@ -1079,6 +1160,304 @@ def test_spray_positions():
             dir_name = "Pull" if direction < 0 else "Opposite" if direction > 0 else "Center"
             print(f"{distance}ft {dir_name}: ({x:.1f}%, {y:.1f}%)")
         print()  # Empty line between distance groups
+
+def get_college_hitting_percentile_data(comparison_level='D1'):
+    """Get college baseball hitting data for percentile calculations - FIXED VERSION"""
+    try:
+        # Determine the WHERE clause based on comparison level
+        if comparison_level == 'SEC':
+            level_filter = "League = 'SEC'"
+        elif comparison_level in ['D1', 'D2', 'D3']:
+            level_filter = f"Level = '{comparison_level}'"
+        else:
+            level_filter = "Level = 'D1'"  # Default to D1
+        
+        print(f"Querying college hitting percentile data for: {comparison_level}")
+        
+        # FIXED: Separate queries to match the averages function
+        
+        # 1. Get individual batted ball data for avg, 90th percentile, barrel rate, hard hit rate
+        ball_data_query = f"""
+        WITH batter_stats AS (
+            SELECT 
+                Batter,
+                AVG(ExitSpeed) as avg_exit_velo,
+                APPROX_QUANTILES(ExitSpeed, 100)[OFFSET(90)] as percentile_90_exit_velo,
+                AVG(CASE 
+                    WHEN ExitSpeed >= 95 AND Angle IS NOT NULL AND Angle >= 8 AND Angle <= 32 
+                    THEN 1 ELSE 0 
+                END) * 100 as barrel_rate,
+                AVG(CASE 
+                    WHEN ExitSpeed >= 95 
+                    THEN 1 ELSE 0 
+                END) * 100 as hardhit_rate
+            FROM `NCAABaseball.2025Final`
+            WHERE {level_filter}
+            AND ExitSpeed IS NOT NULL
+            AND ExitSpeed BETWEEN 60 AND 120  -- Same filtering as averages
+            GROUP BY Batter
+            HAVING COUNT(*) >= 5  -- Same minimum as averages
+        )
+        SELECT 
+            avg_exit_velo,
+            percentile_90_exit_velo,
+            barrel_rate,
+            hardhit_rate
+        FROM batter_stats
+        WHERE avg_exit_velo IS NOT NULL
+        """
+        
+        # 2. Get max exit velocities per batter (separate query)
+        max_velo_query = f"""
+        SELECT 
+            MAX(CASE WHEN ExitSpeed <= 120 AND ExitSpeed >= 60 THEN ExitSpeed ELSE NULL END) as max_exit_velo
+        FROM `NCAABaseball.2025Final`
+        WHERE {level_filter}
+        AND ExitSpeed IS NOT NULL
+        AND ExitSpeed > 0
+        GROUP BY Batter
+        HAVING COUNT(*) >= 5  -- Same minimum as averages
+        """
+        
+        # Execute ball data query
+        ball_result = client.query(ball_data_query)
+        
+        # Execute max velocity query
+        max_result = client.query(max_velo_query)
+        
+        data = {
+            'avg_exit_velo': [],
+            'percentile_90_exit_velo': [],
+            'max_exit_velo': [],
+            'barrel_rate': [],
+            'hardhit_rate': []
+        }
+        
+        # Process ball data results
+        for row in ball_result:
+            if row.avg_exit_velo is not None:
+                data['avg_exit_velo'].append(float(row.avg_exit_velo))
+            if row.percentile_90_exit_velo is not None:
+                data['percentile_90_exit_velo'].append(float(row.percentile_90_exit_velo))
+            if row.barrel_rate is not None:
+                data['barrel_rate'].append(float(row.barrel_rate))
+            if row.hardhit_rate is not None:
+                data['hardhit_rate'].append(float(row.hardhit_rate))
+        
+        # Process max velocity results
+        for row in max_result:
+            if row.max_exit_velo is not None:
+                data['max_exit_velo'].append(float(row.max_exit_velo))
+        
+        # Debug output
+        print(f"DEBUG: Percentile data collected for {comparison_level}:")
+        for key, values in data.items():
+            print(f"  {key}: {len(values)} values")
+            if values:
+                print(f"    Range: {min(values):.1f} - {max(values):.1f}")
+                print(f"    Average: {sum(values)/len(values):.1f}")
+        
+        # Return data if we have any values
+        has_data = any(len(values) > 0 for values in data.values())
+        print(f"DEBUG: Returning data: {has_data}")
+        
+        return data if has_data else None
+        
+    except Exception as e:
+        print(f"ERROR getting college hitting percentile data for {comparison_level}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def calculate_hitting_percentile_rank(player_value, college_data_list, metric_name=None):
+    """Calculate what percentile the player's value falls into compared to college population"""
+    if player_value is None or not college_data_list or len(college_data_list) == 0:
+        return None
+    
+    sorted_college_data = sorted(college_data_list)
+    total_count = len(sorted_college_data)
+    
+    # Count how many college players this player performs better than
+    values_below = sum(1 for value in sorted_college_data if value < player_value)
+    
+    # Calculate percentile - this should be the percentage of players below this performance
+    raw_percentile = (values_below / total_count) * 100
+    
+    # For hitting metrics, higher values are better, so this calculation should be correct
+    final_percentile = round(raw_percentile, 1)
+    
+    # Cap percentiles: 0% becomes 1%, 100% becomes 99%
+    if final_percentile <= 0:
+        final_percentile = 1.0
+    elif final_percentile >= 100:
+        final_percentile = 99.0
+    
+    # Debug output
+    print(f"DEBUG: Player value: {player_value}, College avg: {sum(sorted_college_data)/len(sorted_college_data):.1f}")
+    print(f"DEBUG: Values below player: {values_below}/{total_count} = {final_percentile}%")
+    
+    return {
+        'percentile': final_percentile,
+        'better': final_percentile >= 50,
+        'total_hitters': total_count
+    }
+
+def calculate_hitting_difference_from_average_with_percentile(player_value, college_data, metric_name=None):
+    """Calculate percentile instead of difference but maintain existing structure for compatibility"""
+    if player_value is None or not college_data:
+        return None
+    
+    percentile_result = calculate_hitting_percentile_rank(
+        player_value, 
+        college_data, 
+        metric_name=metric_name
+    )
+    
+    if not percentile_result:
+        return None
+    
+    return {
+        'difference': percentile_result['percentile'],
+        'better': percentile_result['better'],
+        'absolute_diff': abs(percentile_result['percentile'] - 50)
+    }
+
+def get_multi_level_hitting_comparisons(hitting_data, hitter_name=None):
+    """Get percentile-based comparisons across D1, D2, D3 levels for hitting metrics"""
+    try:
+        # Filter to only include batted balls with exit velocity
+        batted_balls = [hit for hit in hitting_data if hit.get('ExitSpeed')]
+        
+        if not batted_balls:
+            return None
+        
+        # Calculate player's hitting metrics
+        exit_velocities = [h.get('ExitSpeed', 0) for h in batted_balls]
+        
+        # Calculate basic stats
+        player_avg_exit_velo = sum(exit_velocities) / len(exit_velocities)
+        player_max_exit_velo = max(exit_velocities)
+        
+        # Calculate 90th percentile
+        sorted_velocities = sorted(exit_velocities)
+        percentile_90_index = int(0.9 * len(sorted_velocities))
+        player_percentile_90_ev = sorted_velocities[percentile_90_index] if sorted_velocities else 0
+        
+        # Calculate Barrel Rate and Hard Hit Rate
+        barrels = 0
+        hard_hits = 0
+        
+        for hit in batted_balls:
+            exit_speed = hit.get('ExitSpeed', 0)
+            launch_angle = hit.get('Angle')
+            
+            # Hard Hit: 95+ mph
+            if exit_speed >= 95:
+                hard_hits += 1
+                
+                # Barrel: 95+ mph AND launch angle between 8-32 degrees
+                if launch_angle is not None and 8 <= launch_angle <= 32:
+                    barrels += 1
+        
+        # Calculate percentages
+        total_balls_with_ev = len(batted_balls)
+        player_barrel_rate = (barrels / total_balls_with_ev * 100) if total_balls_with_ev > 0 else 0
+        player_hardhit_rate = (hard_hits / total_balls_with_ev * 100) if total_balls_with_ev > 0 else 0
+        
+        # Get comparison level if hitter name provided
+        hitter_comparison_level = 'D1'
+        if hitter_name:
+            hitter_comparison_level = get_hitter_competition_level(hitter_name)
+        
+        levels = ['D1', 'D2', 'D3']
+        level_comparisons = {}
+        
+        # Get both percentile data AND college averages for each level
+        for level in levels:
+            # Get percentile data
+            college_data = get_college_hitting_percentile_data(level)
+            
+            # Get college averages (existing function)
+            college_averages = get_college_hitting_averages(level)
+            
+            # Calculate percentiles for each metric
+            avg_exit_velo_diff = calculate_hitting_difference_from_average_with_percentile(
+                player_avg_exit_velo, 
+                college_data['avg_exit_velo'] if college_data else None,
+                metric_name='avg_exit_velo'
+            )
+            
+            percentile_90_ev_diff = calculate_hitting_difference_from_average_with_percentile(
+                player_percentile_90_ev, 
+                college_data['percentile_90_exit_velo'] if college_data else None,
+                metric_name='percentile_90_exit_velo'
+            )
+            
+            max_exit_velo_diff = calculate_hitting_difference_from_average_with_percentile(
+                player_max_exit_velo, 
+                college_data['max_exit_velo'] if college_data else None,
+                metric_name='max_exit_velo'
+            )
+            
+            barrel_rate_diff = calculate_hitting_difference_from_average_with_percentile(
+                player_barrel_rate, 
+                college_data['barrel_rate'] if college_data else None,
+                metric_name='barrel_rate'
+            )
+            
+            hardhit_rate_diff = calculate_hitting_difference_from_average_with_percentile(
+                player_hardhit_rate, 
+                college_data['hardhit_rate'] if college_data else None,
+                metric_name='hardhit_rate'
+            )
+            
+            # Provide both college averages AND percentiles
+            level_comparisons[level] = {
+                'avg_exit_velo': {
+                    'college_avg': f"{college_averages['avg_exit_velo']:.1f}" if college_averages and college_averages.get('avg_exit_velo') else 'N/A',
+                    'comparison': avg_exit_velo_diff,
+                    'difference': f"{avg_exit_velo_diff['difference']:.0f}%" if avg_exit_velo_diff else 'N/A'
+                },
+                'percentile_90_ev': {
+                    'college_avg': f"{college_averages['percentile_90_exit_velo']:.1f}" if college_averages and college_averages.get('percentile_90_exit_velo') else 'N/A',
+                    'comparison': percentile_90_ev_diff,
+                    'difference': f"{percentile_90_ev_diff['difference']:.0f}%" if percentile_90_ev_diff else 'N/A'
+                },
+                'max_exit_velo': {
+                    'college_avg': f"{college_averages['max_exit_velo']:.1f}" if college_averages and college_averages.get('max_exit_velo') else 'N/A',
+                    'comparison': max_exit_velo_diff,
+                    'difference': f"{max_exit_velo_diff['difference']:.0f}%" if max_exit_velo_diff else 'N/A'
+                },
+                'barrel_rate': {
+                    'college_avg': f"{college_averages['barrel_rate']:.1f}" if college_averages and college_averages.get('barrel_rate') else 'N/A',
+                    'comparison': barrel_rate_diff,
+                    'difference': f"{barrel_rate_diff['difference']:.0f}%" if barrel_rate_diff else 'N/A'
+                },
+                'hardhit_rate': {
+                    'college_avg': f"{college_averages['hardhit_rate']:.1f}" if college_averages and college_averages.get('hardhit_rate') else 'N/A',
+                    'comparison': hardhit_rate_diff,
+                    'difference': f"{hardhit_rate_diff['difference']:.0f}%" if hardhit_rate_diff else 'N/A'
+                }
+            }
+        
+        # Return the hitting comparison data
+        hitting_comparison = {
+            'player_avg_exit_velo': f"{player_avg_exit_velo:.1f}",
+            'player_percentile_90_ev': f"{player_percentile_90_ev:.1f}",
+            'player_max_exit_velo': f"{player_max_exit_velo:.1f}",
+            'player_barrel_rate': f"{player_barrel_rate:.1f}",
+            'player_hardhit_rate': f"{player_hardhit_rate:.1f}",
+            'level_comparisons': level_comparisons,
+            'comparison_level': hitter_comparison_level
+        }
+        
+        return hitting_comparison
+
+    except Exception as e:
+        print(f"Error getting multi-level hitting comparisons: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 
 def generate_hitter_pdf(hitter_name, hitting_data, date):
@@ -1101,6 +1480,9 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
         
         # Calculate summary statistics WITH COMPARISONS (pass hitter_name)
         summary_stats = calculate_hitting_summary(hitting_data, hitter_name)
+
+        # Generate multi-level comparisons
+        multi_level_stats = get_multi_level_hitting_comparisons(hitting_data, hitter_name)
         
         # Get point of contact data - filter for records with valid contact positions
         contact_data = []
@@ -1246,7 +1628,8 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
             spray_stats=spray_chart_stats,  # Use the pre-calculated spray stats
             spray_balls_html=spray_balls_html,  # Add the pre-generated spray chart HTML
             side_view_points_html=side_view_points,
-            overhead_view_points_html=overhead_view_points
+            overhead_view_points_html=overhead_view_points,
+            multi_level_stats=multi_level_stats  # Add the multi-level comparison data
         )
         
         # Generate PDF using WeasyPrint with proper base_url for static files
@@ -1279,7 +1662,7 @@ def generate_hitter_pdf(hitter_name, hitting_data, date):
         return None
 
 def send_hitter_email(hitter_name, email, hitting_data, date):
-    """Send email to hitter with PDF attachment"""
+    """Send email to hitter with PDF attachment - IMPROVED with better error handling and timeouts"""
     try:
         # Check if email config is available
         if not EMAIL_USERNAME or not EMAIL_PASSWORD:
@@ -1348,15 +1731,92 @@ Coaching Staff
         )
         msg.attach(pdf_attachment)
         
-        # Send email
-        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-        server.starttls()
-        server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
+        # IMPROVED: Try multiple SMTP configurations with proper timeouts
+        smtp_configs = [
+            # Gmail with TLS
+            {
+                'host': 'smtp.gmail.com',
+                'port': 587,
+                'use_tls': True,
+                'use_ssl': False,
+                'timeout': 30
+            },
+            # Gmail with SSL
+            {
+                'host': 'smtp.gmail.com', 
+                'port': 465,
+                'use_tls': False,
+                'use_ssl': True,
+                'timeout': 30
+            },
+            # Outlook/Hotmail
+            {
+                'host': 'smtp-mail.outlook.com',
+                'port': 587,
+                'use_tls': True,
+                'use_ssl': False,
+                'timeout': 30
+            }
+        ]
         
-        print(f"Email with PDF sent successfully to {display_name} at {email}")
-        return True
+        # Use the configured host/port if available, otherwise try multiple configs
+        if EMAIL_HOST and EMAIL_PORT:
+            smtp_configs.insert(0, {
+                'host': EMAIL_HOST,
+                'port': EMAIL_PORT,
+                'use_tls': True,
+                'use_ssl': False,
+                'timeout': 30
+            })
+        
+        last_error = None
+        
+        for config in smtp_configs:
+            try:
+                print(f"Attempting to send email via {config['host']}:{config['port']}")
+                
+                if config['use_ssl']:
+                    # Use SMTP_SSL for SSL connections
+                    import smtplib
+                    server = smtplib.SMTP_SSL(
+                        config['host'], 
+                        config['port'], 
+                        timeout=config['timeout']
+                    )
+                else:
+                    # Use regular SMTP for TLS connections
+                    server = smtplib.SMTP(
+                        config['host'], 
+                        config['port'], 
+                        timeout=config['timeout']
+                    )
+                    
+                    if config['use_tls']:
+                        print("Starting TLS...")
+                        server.starttls()
+                
+                print("Logging in...")
+                server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+                
+                print("Sending message...")
+                server.send_message(msg)
+                server.quit()
+                
+                print(f"Email with PDF sent successfully to {display_name} at {email} via {config['host']}")
+                return True
+                
+            except Exception as e:
+                last_error = e
+                print(f"Failed to send via {config['host']}:{config['port']} - {str(e)}")
+                try:
+                    server.quit()
+                except:
+                    pass
+                continue
+        
+        # If all configurations failed
+        print(f"All SMTP configurations failed. Last error: {str(last_error)}")
+        return False
         
     except Exception as e:
         print(f"Failed to send email to {hitter_name} at {email}: {str(e)}")
